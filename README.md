@@ -4,7 +4,7 @@
 
 JobSync is a web app companion for managing your job search journey. This free and open-source project is designed to help job seekers efficiently track and organize their job applications. Say goodbye to the chaos of scattered information and hello to a streamlined, intuitive, and powerful job search experience running locally on your system.
 
-Job searching can be overwhelming, with numerous applications to track and deadlines to meet. JobSeeker Assistant is here to simplify this process, allowing you to focus on big picture and keep track of your job search related activities. JobSync app platform empowers you with the tools you need to stay organized, informed, and proactive throughout your job search.
+Job searching can be overwhelming, with numerous applications to track and deadlines to meet. JobSync simplifies this process so you can focus on the big picture while keeping your applications organized and up to date.
 
 ### Dashboard
 
@@ -14,22 +14,9 @@ Job searching can be overwhelming, with numerous applications to track and deadl
 
 ![App Snapshot](./screenshots/jobsync-myjobs.png?raw=true "My Jobs Page Snapshot Image")
 
-### AI Resume review
-
-![JobSync AI Demo](./screenshots/jobsync-ai.gif)
-
-### AI Job match
-
-![JobSync AI Demo](./screenshots/jobsync-ai-jobmatch.gif)
-
 ## Key Features
 - **Application Tracker:** Keep a detailed record of all your job applications, including company details, job titles, application dates, and current status.
-
-- **Activity Monitoring Dashboard:** Visualize your job search progress with an interactive dashboard that provides insights into your application activities, success rates, and upcoming tasks.
-
-- **Resume Management:** Store and manage your resumes, and use it with AI to get reviews and match with job descriptions.
-
-- **AI Assistant:** Leverage the power of AI to improve your resumes and cover letters. Get personalized job matching with scoring to identify the best opportunities tailored to your profile.
+- **Application Dashboard:** Visualize your job search progress with an interactive dashboard showing applications and recent activity.
 
 
 ## Free to Use and Self-Hosted
@@ -102,30 +89,6 @@ docker compose up
 - <a href="https://github.com/ueberdosis/tiptap">Tiptap</a>
 - <a href="https://github.com/plouc/nivo">Nivo</a>
 - <a href="https://github.com/sqlite/sqlite">Sqlite</a>
-- <a href="https://github.com/langchain-ai">LangChain</a>
-- <a href="https://github.com/ollama/ollama">Ollama</a>
-
-### AI Integration
-
-#### Ollama (llama3.1)
-
-Currently only works with ollama https://ollama.com to review the resume.
-
-Please make sure ollama is installed and running on the same system to use the resume review and job matching feature.
-
-Its making use of llama3.1 model, and only tested with 8B variant, please make sure it is downloaded and included in ollama.
-
-***Note:*** The response is based on the resume and job description content input, for an optimal response please make sure the input content does not contain any special characters, and the length of input content is within the context length of the model in use, also avoid including unnecessary details in the job description. Although llama3.1 supports longer context length, this app only support 3000 tokens context length, model might hallicunate and give unexpected response if longer input text content is used.
-
-#### OpenAI
-
-You must add your valid API key in the docker file, also please make sure openai provider and model is selected from the settings page, ollama is selected as the default provider.
-
-```
-ENV OPENAI_API_KEY=sk-xxx
-```
-
 ### Note
 
 - If you are updating from an old version and already logged in, please try logging out and login again.
-

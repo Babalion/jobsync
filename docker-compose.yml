@@ -15,8 +15,6 @@ services:
       - AUTH_SECRET=${AUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - AUTH_TRUST_HOST=${AUTH_TRUST_HOST}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - ./jobsyncdb/data:/data
     restart: unless-stopped

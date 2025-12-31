@@ -1,6 +1,5 @@
 import {
   getActivityCalendarData,
-  getActivityDataForPeriod,
   getJobsActivityForPeriod,
   getJobsAppliedForPeriod,
   getRecentJobs,
@@ -24,25 +23,15 @@ export default async function Dashboard() {
     { count: jobsAppliedLast30Days, trend: trendFor30Days },
     recentJobs,
     weeklyData,
-    activitiesData,
     activityCalendarData,
   ] = await Promise.all([
     getJobsAppliedForPeriod(7),
     getJobsAppliedForPeriod(30),
     getRecentJobs(),
     getJobsActivityForPeriod(),
-    getActivityDataForPeriod(),
     getActivityCalendarData(),
   ]);
   const activityCalendarDataKeys = Object.keys(activityCalendarData);
-  const activitiesDataKeys = (data: string[]) =>
-    Array.from(
-      new Set(
-        data.flatMap((entry) =>
-          Object.keys(entry).filter((key) => key !== "day")
-        )
-      )
-    );
   return (
     <>
       <div className="grid auto-rows-max items-start gap-2 md:gap-2 lg:col-span-2">
@@ -59,27 +48,11 @@ export default async function Dashboard() {
             trend={trendFor30Days}
           />
         </div>
-        <Tabs defaultValue="jobs">
-          <TabsList>
-            <TabsTrigger value="jobs">Weekly Jobs</TabsTrigger>
-            <TabsTrigger value="activities">Activities</TabsTrigger>
-          </TabsList>
-          <TabsContent value="jobs">
-            <WeeklyBarChart
-              data={weeklyData}
-              keys={["value"]}
-              axisLeftLegend="NUMBER OF JOBS APPLIED"
-            />
-          </TabsContent>
-          <TabsContent value="activities">
-            <WeeklyBarChart
-              data={activitiesData}
-              keys={activitiesDataKeys(activitiesData)}
-              groupMode="stacked"
-              axisLeftLegend="TIME SPENT (Hours)"
-            />
-          </TabsContent>
-        </Tabs>
+        <WeeklyBarChart
+          data={weeklyData}
+          keys={["value"]}
+          axisLeftLegend="NUMBER OF JOBS APPLIED"
+        />
       </div>
       <div>
         <RecentJobsCard jobs={recentJobs} />

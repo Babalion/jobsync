@@ -65,7 +65,6 @@ describe("jobActions", () => {
     jobUrl: "https://example.com/job",
     applied: true,
     userId: mockUser.id,
-    resume: "",
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -202,11 +201,6 @@ describe("jobActions", () => {
         Company: true,
         Status: true,
         Location: true,
-        Resume: {
-          include: {
-            File: true,
-          },
-        },
       },
     });
   });
@@ -309,7 +303,6 @@ describe("jobActions", () => {
           userId: mockUser.id,
           jobUrl: jobData.jobUrl,
           applied: jobData.applied,
-          resumeId: jobData.resume,
         },
       });
     });
@@ -338,7 +331,6 @@ describe("jobActions", () => {
           jobType: jobData.type,
           userId: mockUser.id,
           applied: jobData.applied,
-          resumeId: jobData.resume,
         },
       });
       expect(result).toEqual({ job: jobData, success: true });

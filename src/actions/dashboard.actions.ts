@@ -2,7 +2,7 @@ import prisma from "@/lib/db";
 import { calculatePercentageDifference, getLast7Days } from "@/lib/utils";
 import { getCurrentUser } from "@/utils/user.utils";
 import { Prisma } from "@prisma/client";
-import { addMinutes, format, subDays } from "date-fns";
+import { format, subDays } from "date-fns";
 
 export const getJobsAppliedForPeriod = async (
   daysAgo: number
@@ -69,65 +69,6 @@ export const getRecentJobs = async (): Promise<any | undefined> => {
     return list;
   } catch (error) {
     const msg = "Failed to fetch jobs list. ";
-    console.error(msg, error);
-    throw new Error(msg);
-  }
-};
-
-export const getActivityDataForPeriod = async (): Promise<any | undefined> => {
-  try {
-    const user = await getCurrentUser();
-
-    if (!user) {
-      throw new Error("Not authenticated");
-    }
-    const today = addMinutes(new Date(), 5);
-    const sevenDaysAgo = subDays(today, 6);
-    const activities = await prisma.activity.findMany({
-      where: {
-        userId: user.id,
-        endTime: {
-          gte: sevenDaysAgo,
-          lte: today,
-        },
-      },
-      select: {
-        endTime: true,
-        duration: true,
-        activityType: {
-          select: {
-            label: true,
-          },
-        },
-      },
-      orderBy: {
-        endTime: "asc",
-      },
-    });
-    const groupedData = activities.reduce((acc: any, activity: any) => {
-      const day = format(new Date(activity.endTime), "PP");
-      const activityTypeLabel = activity.activityType?.label || "Unknown";
-
-      if (!acc[day]) {
-        acc[day] = { day: day.split(",")[0] };
-      }
-
-      const durationInHours = (activity.duration || 0) / 60;
-      acc[day][activityTypeLabel] = (
-        (parseFloat(acc[day][activityTypeLabel]) || 0) + durationInHours
-      ).toFixed(1);
-
-      return acc;
-    }, {});
-    const last7Days = getLast7Days();
-    const result = last7Days.map((date) => ({
-      day: date.split(",")[0],
-      ...groupedData[date],
-    }));
-
-    return result;
-  } catch (error) {
-    const msg = "Failed to fetch activities data.";
     console.error(msg, error);
     throw new Error(msg);
   }

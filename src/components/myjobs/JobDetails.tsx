@@ -12,19 +12,12 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Button } from "../ui/button";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { AiJobMatchSection } from "../profile/AiJobMatchSection";
-import { useState } from "react";
-import { DownloadFileButton } from "../profile/DownloadFileButton";
 
 function JobDetails({ job }: { job: JobResponse }) {
-  const [aiSectionOpen, setAiSectionOpen] = useState(false);
   const router = useRouter();
   const goBack = () => router.back();
-  const getAiJobMatch = async () => {
-    setAiSectionOpen(true);
-  };
   const getJobType = (code: string) => {
     switch (code) {
       case "FT":
@@ -43,18 +36,6 @@ function JobDetails({ job }: { job: JobResponse }) {
         <Button title="Go Back" size="sm" variant="outline" onClick={goBack}>
           <ArrowLeft />
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 gap-1 cursor-pointer"
-          onClick={getAiJobMatch}
-          // disabled={loading}
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Match with AI
-          </span>
-        </Button>
       </div>
       {job?.id && (
         <Card className="col-span-3">
@@ -65,15 +46,6 @@ function JobDetails({ job }: { job: JobResponse }) {
               <CardDescription>
                 {job?.Location?.label} - {getJobType(job?.jobType)}
               </CardDescription>
-            </div>
-            <div>
-              {job?.Resume && job?.Resume?.File && job.Resume?.File?.filePath
-                ? DownloadFileButton(
-                    job?.Resume?.File?.filePath,
-                    job?.Resume?.title,
-                    job?.Resume?.File?.fileName
-                  )
-                : null}
             </div>
           </CardHeader>
           <h3 className="ml-4">
@@ -112,13 +84,6 @@ function JobDetails({ job }: { job: JobResponse }) {
           <CardFooter></CardFooter>
         </Card>
       )}
-      {
-        <AiJobMatchSection
-          jobId={job?.id}
-          aISectionOpen={aiSectionOpen}
-          triggerChange={setAiSectionOpen}
-        />
-      }
     </>
   );
 }

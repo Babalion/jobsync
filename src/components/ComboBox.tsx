@@ -21,13 +21,10 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "./ui/scroll-area";
 import { useState, useTransition } from "react";
-import { delay } from "@/utils/delay";
 import { createLocation } from "@/actions/job.actions";
-import { JobForm } from "@/models/job.model";
 import { addCompany } from "@/actions/company.actions";
 import { createJobTitle } from "@/actions/jobtitle.actions";
 import { toast } from "./ui/use-toast";
-import { createActivityType } from "@/actions/activity.actions";
 
 interface ComboboxProps {
   options: any[];
@@ -63,9 +60,6 @@ export function Combobox({ options, field, creatable }: ComboboxProps) {
             });
           }
           response = data;
-          break;
-        case "activityType":
-          response = await createActivityType(label);
           break;
         default:
           break;
