@@ -38,6 +38,7 @@ import { APP_CONSTANTS } from "@/lib/constants";
 import Loading from "../Loading";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AddJob } from "./AddJob";
+import { ImportJobJSON } from "./ImportJobJSON";
 import MyJobsTable from "./MyJobsTable";
 import { format } from "date-fns";
 
@@ -245,6 +246,14 @@ function JobsContainer({
                   Export
                 </span>
               </Button>
+              <ImportJobJSON
+                jobStatuses={statuses}
+                companies={companies}
+                jobTitles={titles}
+                locations={locations}
+                jobSources={sources}
+                onImported={reloadJobs}
+              />
               <AddJob
                 jobStatuses={statuses}
                 companies={companies}
