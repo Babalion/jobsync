@@ -7,6 +7,18 @@ import { ensureUserExists } from "@/utils/user.ensure";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+const getFaviconFromUrl = (siteUrl?: string) => {
+  if (!siteUrl) return "";
+  try {
+    const url = siteUrl.match(/^https?:\/\//)
+      ? new URL(siteUrl)
+      : new URL(`https://${siteUrl}`);
+    return `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=64`;
+  } catch {
+    return "";
+  }
+};
+
 export const getCompanyList = async (
   page = 1,
   limit = 10,
@@ -98,9 +110,10 @@ export const addCompany = async (
     }
     const dbUser = await ensureUserExists(user);
 
-    const { company, logoUrl } = data;
+    const { company, companyUrl } = data;
 
     const value = company.trim().toLowerCase();
+    const website = companyUrl?.trim() || undefined;
 
     const companyExists = await prisma.company.findUnique({
       where: {
@@ -115,12 +128,15 @@ export const addCompany = async (
       throw new Error("Company already exists!");
     }
 
+    const finalLogo = getFaviconFromUrl(website) || undefined;
+
     const res = await prisma.company.create({
       data: {
         createdBy: dbUser.id,
         value,
         label: company,
-        logoUrl,
+        logoUrl: finalLogo,
+        website,
       },
     });
     revalidatePath("/dashboard/myjobs", "page");
@@ -142,13 +158,14 @@ export const updateCompany = async (
     }
     const dbUser = await ensureUserExists(user);
 
-    const { id, company, logoUrl, createdBy } = data;
+    const { id, company, companyUrl, createdBy } = data;
 
     if (!id || dbUser.id != createdBy) {
       throw new Error("Id is not provided or no user privilages");
     }
 
     const value = company.trim().toLowerCase();
+    const website = companyUrl?.trim() || undefined;
 
     const companyExists = await prisma.company.findUnique({
       where: {
@@ -170,7 +187,8 @@ export const updateCompany = async (
       data: {
         value,
         label: company,
-        logoUrl,
+        logoUrl: getFaviconFromUrl(website) || undefined,
+        website,
       },
     });
 

@@ -48,6 +48,7 @@ export interface Company {
   label: string;
   value: string;
   createdBy: string;
+  website?: string;
   logoUrl?: string;
   _count?: {
     jobsApplied: number;

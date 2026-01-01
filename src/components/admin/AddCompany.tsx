@@ -48,9 +48,30 @@ function AddCompany({
 
   const form = useForm<z.infer<typeof AddCompanyFormSchema>>({
     resolver: zodResolver(AddCompanyFormSchema),
+    defaultValues: {
+      company: "",
+      companyUrl: "",
+    },
   });
 
-  const { reset, formState } = form;
+  const { reset, formState, watch, setValue } = form;
+  const watchedCompanyUrl = watch("companyUrl");
+
+  const getFaviconFromUrl = (siteUrl?: string) => {
+    if (!siteUrl) return "";
+    try {
+      const url = siteUrl.match(/^https?:\/\//)
+        ? new URL(siteUrl)
+        : new URL(`https://${siteUrl}`);
+      return `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=64`;
+    } catch {
+      return "";
+    }
+  };
+
+  const previewLogo =
+    (watchedCompanyUrl ? getFaviconFromUrl(watchedCompanyUrl) : "") ||
+    "/images/jobsync-logo.svg";
 
   useEffect(() => {
     if (editCompany) {
@@ -59,7 +80,7 @@ function AddCompany({
           id: editCompany?.id,
           company: editCompany?.label ?? "",
           createdBy: editCompany?.createdBy,
-          logoUrl: editCompany?.logoUrl ?? "",
+          companyUrl: editCompany?.website ?? "",
         },
         { keepDefaultValues: true }
       );
@@ -144,21 +165,49 @@ function AddCompany({
                 />
               </div>
 
-              {/* COMPANY LOGO URL */}
+              {/* COMPANY WEBSITE FOR FAVICON */}
               <div className="md:col-span-2">
                 <FormField
                   control={form.control}
-                  name="logoUrl"
+                  name="companyUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company Logo URL</FormLabel>
+                      <FormLabel>Company Website</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            const favicon = getFaviconFromUrl(e.target.value);
+                            if (favicon) {
+                              setValue("companyUrl", e.target.value, {
+                                shouldDirty: true,
+                              });
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* LOGO PREVIEW */}
+              <div className="md:col-span-2 flex items-center gap-4">
+                <img
+                  alt="Logo preview"
+                  src={previewLogo || "/images/jobsync-logo.svg"}
+                  width={48}
+                  height={48}
+                  className="rounded-md border"
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/jobsync-logo.svg";
+                  }}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Preview (logo URL or favicon)
+                </p>
               </div>
               <div className="md:col-span-2 mt-4">
                 <DialogFooter

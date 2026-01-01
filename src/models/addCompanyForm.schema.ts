@@ -8,5 +8,5 @@ export const AddCompanyFormSchema = z.object({
       required_error: "Company name is required.",
     })
     .min(1),
-  logoUrl: z.string().default("").optional(),
+  companyUrl: z.string().default("").optional(),
 });

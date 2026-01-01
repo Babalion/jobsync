@@ -17,6 +17,9 @@ export default function RecentJobsCard({ jobs }: { jobs: JobResponse[] }) {
               <AvatarImage
                 src={job.Company?.logoUrl || "/images/jobsync-logo.svg"}
                 alt="Avatar"
+                onError={(e) => {
+                  e.currentTarget.src = "/images/jobsync-logo.svg";
+                }}
               />
               <AvatarFallback>JS</AvatarFallback>
             </Avatar>

@@ -1,6 +1,5 @@
 "use client";
 import { Button } from "../ui/button";
-import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,12 +98,15 @@ function CompaniesTable({
             return (
               <TableRow key={company.id}>
                 <TableCell className="hidden sm:table-cell">
-                  <Image
+                  <img
                     alt="Company logo"
                     className="aspect-square rounded-md object-cover"
-                    height="32"
+                    height={32}
                     src={company.logoUrl || "/images/jobsync-logo.svg"}
-                    width="32"
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/jobsync-logo.svg";
+                    }}
+                    width={32}
                   />
                 </TableCell>
                 <TableCell className="font-medium">{company.label}</TableCell>

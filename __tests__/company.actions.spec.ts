@@ -191,7 +191,7 @@ describe("Company Actions", () => {
   describe("addCompany", () => {
     const validData = {
       company: "New Company",
-      logoUrl: "http://example.com/logo.png",
+      companyUrl: "http://example.com",
     };
 
     it("should create a new company successfully", async () => {
@@ -219,7 +219,7 @@ describe("Company Actions", () => {
           createdBy: mockUser.id,
           value: "new company",
           label: "New Company",
-          logoUrl: "http://example.com/logo.png",
+          logoUrl: expect.any(String),
         },
       });
       expect(revalidatePath).toHaveBeenCalledWith("/dashboard/myjobs", "page");
@@ -279,7 +279,7 @@ describe("Company Actions", () => {
     const validData = {
       id: "company-id",
       company: "Updated Company",
-      logoUrl: "http://example.com/logo.png",
+      companyUrl: "http://example.com",
       createdBy: "user-id",
     };
 
@@ -312,7 +312,7 @@ describe("Company Actions", () => {
         data: {
           value: "updated company",
           label: "Updated Company",
-          logoUrl: "http://example.com/logo.png",
+          logoUrl: expect.any(String),
         },
       });
     });
