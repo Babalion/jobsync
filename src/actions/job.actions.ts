@@ -4,6 +4,7 @@ import { handleError } from "@/lib/utils";
 import { AddJobFormSchema } from "@/models/addJobForm.schema";
 import { JOB_TYPES, JobStatus } from "@/models/job.model";
 import { getCurrentUser } from "@/utils/user.utils";
+import { ensureUserExists } from "@/utils/user.ensure";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -38,6 +39,7 @@ export const getJobsList = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
     const skip = (page - 1) * limit;
 
     const filterBy = filter
@@ -54,13 +56,14 @@ export const getJobsList = async (
     const [data, total] = await Promise.all([
       prisma.job.findMany({
         where: {
-          userId: user.id,
+          userId: dbUser.id,
           ...filterBy,
         },
         skip,
         take: limit,
         select: {
           id: true,
+          createdAt: true,
           JobSource: true,
           JobTitle: true,
           jobType: true,
@@ -78,7 +81,7 @@ export const getJobsList = async (
       }),
       prisma.job.count({
         where: {
-          userId: user.id,
+          userId: dbUser.id,
           ...filterBy,
         },
       }),
@@ -180,6 +183,7 @@ export const createLocation = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
 
     const value = label.trim().toLowerCase();
 
@@ -188,7 +192,7 @@ export const createLocation = async (
     }
 
     const location = await prisma.location.create({
-      data: { label, value, createdBy: user.id },
+      data: { label, value, createdBy: dbUser.id },
     });
 
     return { data: location, success: true };
@@ -207,6 +211,7 @@ export const addJob = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
 
     const {
       title,
@@ -236,7 +241,7 @@ export const addJob = async (
         appliedDate: dateApplied,
         description: jobDescription,
         jobType: type,
-        userId: user.id,
+        userId: dbUser.id,
         jobUrl,
         applied,
       },
@@ -257,7 +262,9 @@ export const updateJob = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
-    if (!data.id || user.id != data.userId) {
+    const dbUser = await ensureUserExists(user);
+
+    if (!data.id || dbUser.id != data.userId) {
       throw new Error("Id is not provide or no user privilages");
     }
 
@@ -288,7 +295,6 @@ export const updateJob = async (
         statusId: status,
         jobSourceId: source,
         salaryRange: salaryRange,
-        createdAt: new Date(),
         dueDate: dueDate,
         appliedDate: dateApplied,
         description: jobDescription,
@@ -315,6 +321,7 @@ export const updateJobStatus = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
     const dataToUpdate = () => {
       switch (status.value) {
         case "applied":
@@ -338,7 +345,7 @@ export const updateJobStatus = async (
     const job = await prisma.job.update({
       where: {
         id: jobId,
-        userId: user.id,
+        userId: dbUser.id,
       },
       data: dataToUpdate(),
     });

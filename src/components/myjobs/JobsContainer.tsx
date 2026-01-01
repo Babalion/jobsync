@@ -57,9 +57,9 @@ function JobsContainer({
   locations,
   sources,
 }: MyJobsProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const queryParams = useSearchParams();
+  const router = useRouter();
   const createQueryString = useCallback(
     (name: string, value: string) => {
       const params = new URLSearchParams(queryParams.toString());
@@ -262,6 +262,7 @@ function JobsContainer({
                 jobSources={sources}
                 editJob={editJob}
                 resetEditJob={resetEditJob}
+                reloadJobs={reloadJobs}
               />
             </div>
           </div>

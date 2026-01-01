@@ -2,10 +2,18 @@
 import prisma from "@/lib/db";
 import { handleError } from "@/lib/utils";
 import { getCurrentUser } from "@/utils/user.utils";
+import { ensureUserExists } from "@/utils/user.ensure";
 
 export const getAllJobLocations = async (): Promise<any | undefined> => {
   try {
-    const list = await prisma.location.findMany();
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+    const dbUser = await ensureUserExists(user);
+    const list = await prisma.location.findMany({
+      where: { createdBy: dbUser.id },
+    });
     return list;
   } catch (error) {
     const msg = "Failed to fetch job location list. ";
@@ -24,12 +32,13 @@ export const getJobLocationsList = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
       prisma.location.findMany({
         where: {
-          createdBy: user.id,
+          createdBy: dbUser.id,
         },
         skip,
         take: limit,
@@ -59,7 +68,7 @@ export const getJobLocationsList = async (
       }),
       prisma.location.count({
         where: {
-          createdBy: user.id,
+          createdBy: dbUser.id,
         },
       }),
     ]);

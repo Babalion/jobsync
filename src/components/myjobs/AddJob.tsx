@@ -26,6 +26,7 @@ import {
 import { addDays } from "date-fns";
 import { z } from "zod";
 import { toast } from "../ui/use-toast";
+import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -52,6 +53,7 @@ type AddJobProps = {
   jobSources: JobSource[];
   editJob?: JobResponse | null;
   resetEditJob: () => void;
+  reloadJobs: () => Promise<void>;
 };
 
 export function AddJob({
@@ -62,9 +64,11 @@ export function AddJob({
   jobSources,
   editJob,
   resetEditJob,
+  reloadJobs,
 }: AddJobProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const form = useForm<z.infer<typeof AddJobFormSchema>>({
     resolver: zodResolver(AddJobFormSchema),
     defaultValues: {
@@ -72,6 +76,8 @@ export function AddJob({
       dueDate: addDays(new Date(), 3),
       status: jobStatuses[0].id,
       salaryRange: "1",
+      jobUrl: "",
+      applied: false,
     },
   });
 
@@ -95,7 +101,7 @@ export function AddJob({
           salaryRange: editJob.salaryRange,
           jobDescription: editJob.description,
           applied: editJob.applied,
-          jobUrl: editJob.jobUrl ?? undefined,
+          jobUrl: editJob.jobUrl ?? "",
           dateApplied: editJob.appliedDate ?? undefined,
         },
         { keepDefaultValues: true }
@@ -109,22 +115,25 @@ export function AddJob({
       const { success, message } = editJob
         ? await updateJob(data)
         : await addJob(data);
-      reset();
-      setDialogOpen(false);
-      if (!success) {
+      if (success) {
+        toast({
+          variant: "success",
+          description: `Job has been ${
+            editJob ? "updated" : "created"
+          } successfully`,
+        });
+        await reloadJobs();
+        router.refresh();
+        reset();
+        resetEditJob();
+        setDialogOpen(false);
+      } else {
         toast({
           variant: "destructive",
           title: "Error!",
           description: message,
         });
       }
-      redirect("/dashboard/myjobs");
-    });
-    toast({
-      variant: "success",
-      description: `Job has been ${
-        editJob ? "updated" : "created"
-      } successfully`,
     });
   }
 

@@ -17,7 +17,7 @@ jest.mock("@/actions/job.actions", () => ({
 }));
 
 jest.mock("next/navigation", () => ({
-  redirect: jest.fn(),
+  useRouter: () => ({ refresh: jest.fn() }),
 }));
 
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
@@ -72,6 +72,7 @@ describe("AddJob Component", () => {
         jobSources={mockJobSources}
         editJob={null}
         resetEditJob={mockResetEditJob}
+        reloadJobs={jest.fn().mockResolvedValue(undefined)}
       />
     );
     const addJobButton = screen.getByTestId("add-job-btn");
@@ -222,7 +223,7 @@ describe("AddJob Component", () => {
         dateApplied: undefined,
         salaryRange: "1",
         jobDescription: "<p>New Job Description</p>",
-        jobUrl: undefined,
+        jobUrl: "",
         applied: false,
       });
     });

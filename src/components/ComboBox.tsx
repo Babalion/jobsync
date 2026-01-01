@@ -39,16 +39,33 @@ export function Combobox({ options, field, creatable }: ComboboxProps) {
   const [isPending, startTransition] = useTransition();
 
   const onCreateOption = (label: string) => {
-    if (!label) return;
+    if (!label || !creatable) return;
     startTransition(async () => {
       let response;
       switch (field.name) {
         case "company":
           const res = await addCompany({ company: label });
+          if (!res?.success) {
+            toast({
+              variant: "destructive",
+              title: "Error!",
+              description: res?.message ?? "Failed to create item.",
+            });
+            return;
+          }
           response = res.data;
           break;
         case "title":
           response = await createJobTitle(label);
+          if ((response as any)?.success === false) {
+            toast({
+              variant: "destructive",
+              title: "Error!",
+              description:
+                (response as any)?.message ?? "Failed to create item.",
+            });
+            return;
+          }
           break;
         case "location":
           const { data, success, message } = await createLocation(label);
@@ -58,15 +75,25 @@ export function Combobox({ options, field, creatable }: ComboboxProps) {
               title: "Error!",
               description: message,
             });
+            return;
           }
           response = data;
           break;
         default:
           break;
       }
+      if (!response?.id) {
+        toast({
+          variant: "destructive",
+          title: "Error!",
+          description: "Failed to create item. Please try again.",
+        });
+        return;
+      }
       options.unshift(response);
       field.onChange(response.id);
       setIsPopoverOpen(false);
+      setNewOption("");
     });
   };
 
@@ -133,7 +160,7 @@ export function Combobox({ options, field, creatable }: ComboboxProps) {
                 {options.map((option) => (
                   <CommandItem
                     value={option.value}
-                    key={option.id}
+                    key={option.id ?? `${option.value}-${option.label}`}
                     onSelect={() => {
                       if (field.onChange) {
                         field.onChange(option.id);

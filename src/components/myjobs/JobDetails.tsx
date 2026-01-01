@@ -30,6 +30,26 @@ function JobDetails({ job }: { job: JobResponse }) {
         return "Unknown";
     }
   };
+
+  const statusColor = (value?: string) => {
+    switch (value) {
+      case "applied":
+        return "bg-sky-500";
+      case "interview":
+        return "bg-emerald-500";
+      case "offer":
+        return "bg-amber-500";
+      case "rejected":
+        return "bg-rose-500";
+      case "expired":
+        return "bg-slate-500";
+      case "archived":
+        return "bg-neutral-500";
+      case "draft":
+      default:
+        return "bg-gray-400";
+    }
+  };
   return (
     <>
       <div className="flex justify-between">
@@ -50,13 +70,12 @@ function JobDetails({ job }: { job: JobResponse }) {
           </CardHeader>
           <h3 className="ml-4">
             {new Date() > job.dueDate && job.Status?.value === "draft" ? (
-              <Badge className="bg-red-500">Expired</Badge>
+              <Badge className="bg-slate-500">Expired</Badge>
             ) : (
               <Badge
                 className={cn(
                   "w-[70px] justify-center",
-                  job.Status?.value === "applied" && "bg-cyan-500",
-                  job.Status?.value === "interview" && "bg-green-500"
+                  statusColor(job.Status?.value)
                 )}
               >
                 {job.Status?.label}

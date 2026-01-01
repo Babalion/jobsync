@@ -2,6 +2,7 @@
 import prisma from "@/lib/db";
 import { handleError } from "@/lib/utils";
 import { getCurrentUser } from "@/utils/user.utils";
+import { ensureUserExists } from "@/utils/user.ensure";
 
 export const getAllJobTitles = async (): Promise<any | undefined> => {
   try {
@@ -9,9 +10,10 @@ export const getAllJobTitles = async (): Promise<any | undefined> => {
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
     const list = await prisma.jobTitle.findMany({
       where: {
-        createdBy: user?.id,
+        createdBy: dbUser.id,
       },
     });
     return list;
@@ -32,12 +34,13 @@ export const getJobTitleList = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
       prisma.jobTitle.findMany({
         where: {
-          createdBy: user.id,
+          createdBy: dbUser.id,
         },
         skip,
         take: limit,
@@ -67,7 +70,7 @@ export const getJobTitleList = async (
       }),
       prisma.jobTitle.count({
         where: {
-          createdBy: user.id,
+          createdBy: dbUser.id,
         },
       }),
     ]);
@@ -87,13 +90,14 @@ export const createJobTitle = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
 
     const value = label.trim().toLowerCase();
 
     const upsertedTitle = await prisma.jobTitle.upsert({
-      where: { value, createdBy: user.id },
+      where: { value_createdBy: { value, createdBy: dbUser.id } },
       update: { label },
-      create: { label, value, createdBy: user.id },
+      create: { label, value, createdBy: dbUser.id },
     });
 
     return upsertedTitle;

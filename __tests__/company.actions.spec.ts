@@ -29,6 +29,10 @@ jest.mock("@/utils/user.utils", () => ({
   getCurrentUser: jest.fn(),
 }));
 
+jest.mock("@/utils/user.ensure", () => ({
+  ensureUserExists: jest.fn(async (user) => user),
+}));
+
 jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
 }));
@@ -208,7 +212,7 @@ describe("Company Actions", () => {
 
       expect(result).toEqual({ success: true, data: mockCompany });
       expect(prisma.company.findUnique).toHaveBeenCalledWith({
-        where: { value: "new company" },
+        where: { value_createdBy: { value: "new company", createdBy: mockUser.id } },
       });
       expect(prisma.company.create).toHaveBeenCalledWith({
         data: {
@@ -250,7 +254,7 @@ describe("Company Actions", () => {
         message: "Company already exists!",
       });
       expect(prisma.company.findUnique).toHaveBeenCalledWith({
-        where: { value: "new company" },
+        where: { value_createdBy: { value: "new company", createdBy: mockUser.id } },
       });
       expect(prisma.company.create).not.toHaveBeenCalled();
     });
@@ -265,7 +269,7 @@ describe("Company Actions", () => {
 
       expect(result).toEqual({ success: false, message: "Unexpected error" });
       expect(prisma.company.findUnique).toHaveBeenCalledWith({
-        where: { value: "new company" },
+        where: { value_createdBy: { value: "new company", createdBy: mockUser.id } },
       });
       expect(prisma.company.create).not.toHaveBeenCalled();
     });
@@ -298,7 +302,9 @@ describe("Company Actions", () => {
       expect(result).toEqual({ success: true, data: mockUpdatedCompany });
 
       expect(prisma.company.findUnique).toHaveBeenCalledWith({
-        where: { value: "updated company" },
+        where: {
+          value_createdBy: { value: "updated company", createdBy: mockUser.id },
+        },
       });
 
       expect(prisma.company.update).toHaveBeenCalledWith({
@@ -327,6 +333,7 @@ describe("Company Actions", () => {
 
       (prisma.company.findUnique as jest.Mock).mockResolvedValue({
         id: "existing-company-id",
+        createdBy: mockUser.id,
       });
 
       const result = await updateCompany(validData);

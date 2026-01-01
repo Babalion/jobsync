@@ -47,6 +47,10 @@ jest.mock("@/utils/user.utils", () => ({
   getCurrentUser: jest.fn(),
 }));
 
+jest.mock("@/utils/user.ensure", () => ({
+  ensureUserExists: jest.fn(async (user) => user),
+}));
+
 describe("jobActions", () => {
   const mockUser = { id: "user-id" };
   const jobData = {

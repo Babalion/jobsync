@@ -39,10 +39,12 @@ model Contact {
 model JobTitle {
   id              String           @id @default(uuid())
   label           String
-  value           String           @unique //TODO: Change and Apply unique constraint on index  with value and userid
+  value           String
   jobs            Job[]
   createdBy       String // userId
   user            User             @relation(fields: [createdBy], references: [id])
+
+  @@unique([value, createdBy])
 }
 
 model JobStatus {
@@ -61,16 +63,20 @@ model Location {
   jobsApplied    Job[]
   createdBy      String // userId
   user           User             @relation(fields: [createdBy], references: [id])
+
+  @@unique([value, createdBy])
 }
 
 model Company {
   id              String           @id @default(uuid())
   label           String
-  value           String           @unique
+  value           String
   jobsApplied     Job[]
   logoUrl         String? // field is optional
   createdBy       String // userId
   user            User             @relation(fields: [createdBy], references: [id])
+
+  @@unique([value, createdBy])
 }
 
 model JobSource {
@@ -95,7 +101,7 @@ model Job {
   jobUrl      String?
   description String
   jobType     String
-  createdAt   DateTime
+  createdAt   DateTime    @default(now())
   applied     Boolean     @default(false)
   appliedDate DateTime?
   dueDate     DateTime?

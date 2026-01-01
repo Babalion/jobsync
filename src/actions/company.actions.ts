@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { handleError } from "@/lib/utils";
 import { AddCompanyFormSchema } from "@/models/addCompanyForm.schema";
 import { getCurrentUser } from "@/utils/user.utils";
+import { ensureUserExists } from "@/utils/user.ensure";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -17,12 +18,13 @@ export const getCompanyList = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
       prisma.company.findMany({
         where: {
-          createdBy: user.id,
+          createdBy: dbUser.id,
         },
         skip,
         take: limit,
@@ -53,7 +55,7 @@ export const getCompanyList = async (
       }),
       prisma.company.count({
         where: {
-          createdBy: user.id,
+          createdBy: dbUser.id,
         },
       }),
     ]);
@@ -71,10 +73,11 @@ export const getAllCompanies = async (): Promise<any | undefined> => {
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
 
     const comapnies = await prisma.company.findMany({
       where: {
-        createdBy: user.id,
+        createdBy: dbUser.id,
       },
     });
     return comapnies;
@@ -93,6 +96,7 @@ export const addCompany = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
 
     const { company, logoUrl } = data;
 
@@ -100,7 +104,10 @@ export const addCompany = async (
 
     const companyExists = await prisma.company.findUnique({
       where: {
-        value,
+        value_createdBy: {
+          value,
+          createdBy: dbUser.id,
+        },
       },
     });
 
@@ -110,7 +117,7 @@ export const addCompany = async (
 
     const res = await prisma.company.create({
       data: {
-        createdBy: user.id,
+        createdBy: dbUser.id,
         value,
         label: company,
         logoUrl,
@@ -133,10 +140,11 @@ export const updateCompany = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    const dbUser = await ensureUserExists(user);
 
     const { id, company, logoUrl, createdBy } = data;
 
-    if (!id || user.id != createdBy) {
+    if (!id || dbUser.id != createdBy) {
       throw new Error("Id is not provided or no user privilages");
     }
 
@@ -144,11 +152,14 @@ export const updateCompany = async (
 
     const companyExists = await prisma.company.findUnique({
       where: {
-        value,
+        value_createdBy: {
+          value,
+          createdBy: dbUser.id,
+        },
       },
     });
 
-    if (companyExists) {
+    if (companyExists && companyExists.id !== id) {
       throw new Error("Company already exists!");
     }
 

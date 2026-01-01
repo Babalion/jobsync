@@ -66,6 +66,26 @@ function MyJobsTable({
     setJobIdToDelete(jobId);
   };
 
+  const statusColor = (value?: string) => {
+    switch (value) {
+      case "applied":
+        return "bg-sky-500";
+      case "interview":
+        return "bg-emerald-500";
+      case "offer":
+        return "bg-amber-500";
+      case "rejected":
+        return "bg-rose-500";
+      case "expired":
+        return "bg-slate-500";
+      case "archived":
+        return "bg-neutral-500";
+      case "draft":
+      default:
+        return "bg-gray-400";
+    }
+  };
+
   return (
     <>
       <Table>
@@ -74,6 +94,7 @@ function MyJobsTable({
             <TableHead className="hidden w-[100px] sm:table-cell">
               <span className="sr-only">Company Logo</span>
             </TableHead>
+            <TableHead className="hidden md:table-cell">Date Added</TableHead>
             <TableHead className="hidden md:table-cell">Date Applied</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Company</TableHead>
@@ -99,6 +120,9 @@ function MyJobsTable({
                   />
                 </TableCell>
                 <TableCell className="hidden md:table-cell w-[120px]">
+                  {job.createdAt ? format(job.createdAt, "PP") : "N/A"}
+                </TableCell>
+                <TableCell className="hidden md:table-cell w-[120px]">
                   {job.appliedDate ? format(job.appliedDate, "PP") : "N/A"}
                 </TableCell>
                 <TableCell
@@ -117,13 +141,12 @@ function MyJobsTable({
                 </TableCell>
                 <TableCell>
                   {new Date() > job.dueDate && job.Status?.value === "draft" ? (
-                    <Badge className="bg-red-500">Expired</Badge>
+                    <Badge className="bg-slate-500">Expired</Badge>
                   ) : (
                     <Badge
                       className={cn(
                         "w-[70px] justify-center",
-                        job.Status?.value === "applied" && "bg-cyan-500",
-                        job.Status?.value === "interview" && "bg-green-500"
+                        statusColor(job.Status?.value)
                       )}
                     >
                       {job.Status?.label}
