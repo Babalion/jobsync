@@ -74,6 +74,16 @@ model Company {
   jobsApplied     Job[]
   logoUrl         String? // field is optional
   website         String?
+  archetype       String?
+  ownership       String?
+  industryRole    String?
+  innovationLevel String?
+  cultureTag      String?
+  country         String?
+  summary         String?
+  fitNotes        String?
+  hasWorksCouncil Boolean          @default(false)
+  hasCollectiveAgreement Boolean   @default(false)
   createdBy       String // userId
   user            User             @relation(fields: [createdBy], references: [id])
 

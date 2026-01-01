@@ -112,6 +112,17 @@ describe("Company Actions", () => {
           label: true,
           value: true,
           logoUrl: true,
+          website: true,
+          archetype: true,
+          ownership: true,
+          cultureTag: true,
+          industryRole: true,
+          innovationLevel: true,
+          country: true,
+          summary: true,
+          fitNotes: true,
+          hasWorksCouncil: true,
+          hasCollectiveAgreement: true,
           _count: {
             select: {
               jobsApplied: {
@@ -202,6 +213,7 @@ describe("Company Actions", () => {
         label: "New Company",
         value: "new company",
         logoUrl: "http://example.com/logo.png",
+        website: "http://example.com",
         createdBy: mockUser.id,
       };
       (prisma.company.create as jest.Mock).mockResolvedValue(mockCompany);
@@ -215,12 +227,13 @@ describe("Company Actions", () => {
         where: { value_createdBy: { value: "new company", createdBy: mockUser.id } },
       });
       expect(prisma.company.create).toHaveBeenCalledWith({
-        data: {
+        data: expect.objectContaining({
           createdBy: mockUser.id,
           value: "new company",
           label: "New Company",
+          website: "http://example.com",
           logoUrl: expect.any(String),
-        },
+        }),
       });
       expect(revalidatePath).toHaveBeenCalledWith("/dashboard/myjobs", "page");
     });
@@ -309,11 +322,12 @@ describe("Company Actions", () => {
 
       expect(prisma.company.update).toHaveBeenCalledWith({
         where: { id: "company-id" },
-        data: {
+        data: expect.objectContaining({
           value: "updated company",
           label: "Updated Company",
+          website: "http://example.com",
           logoUrl: expect.any(String),
-        },
+        }),
       });
     });
 

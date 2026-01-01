@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -41,6 +41,7 @@ import { AddJob } from "./AddJob";
 import { ImportJobJSON } from "./ImportJobJSON";
 import MyJobsTable from "./MyJobsTable";
 import { format } from "date-fns";
+import { Input } from "../ui/input";
 
 type MyJobsProps = {
   statuses: JobStatus[];
@@ -75,6 +76,18 @@ function JobsContainer({
   const [filterKey, setFilterKey] = useState<string>();
   const [editJob, setEditJob] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState<{
+    key:
+      | "title"
+      | "company"
+      | "status"
+      | "createdAt"
+      | "appliedDate"
+      | "location"
+      | "source";
+    direction: "asc" | "desc";
+  }>({ key: "createdAt", direction: "desc" });
 
   const jobsPerPage = APP_CONSTANTS.RECORDS_PER_PAGE;
 
@@ -167,6 +180,63 @@ function JobsContainer({
     (async () => await loadJobs(1))();
   }, [loadJobs]);
 
+  const filteredJobs = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    const filtered = jobs.filter((job) => {
+      const matchesSearch =
+        !term ||
+        job.JobTitle?.label.toLowerCase().includes(term) ||
+        (job.Company?.label || "").toLowerCase().includes(term) ||
+        (job.Location?.label || "").toLowerCase().includes(term);
+      return matchesSearch;
+    });
+    const direction = sortConfig.direction === "asc" ? 1 : -1;
+    const sorted = [...filtered].sort((a, b) => {
+      const getVal = (j: JobResponse) => {
+        switch (sortConfig.key) {
+          case "title":
+            return j.JobTitle?.label || "";
+          case "company":
+            return j.Company?.label || "";
+          case "status":
+            return j.Status?.label || "";
+          case "location":
+            return j.Location?.label || "";
+          case "source":
+            return j.JobSource?.label || "";
+          case "appliedDate":
+            return j.appliedDate ? new Date(j.appliedDate).getTime() : 0;
+          case "createdAt":
+          default:
+            return j.createdAt ? new Date(j.createdAt).getTime() : 0;
+        }
+      };
+      const aVal = getVal(a);
+      const bVal = getVal(b);
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return (aVal - bVal) * direction;
+      }
+      return String(aVal).localeCompare(String(bVal)) * direction;
+    });
+    return sorted;
+  }, [jobs, searchTerm, sortConfig]);
+
+  const handleSort = (
+    key:
+      | "title"
+      | "company"
+      | "status"
+      | "createdAt"
+      | "appliedDate"
+      | "location"
+      | "source"
+  ) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
   const onFilterChange = (filterBy: string) => {
     if (filterBy === "none") {
       reloadJobs();
@@ -216,6 +286,12 @@ function JobsContainer({
           <CardTitle>My Jobs</CardTitle>
           <div className="flex items-center">
             <div className="ml-auto flex items-center gap-2">
+              <Input
+                placeholder="Search jobs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-8 w-[180px]"
+              />
               <Select value={filterKey} onValueChange={onFilterChange}>
                 <SelectTrigger className="w-[120px] h-8">
                   <ListFilter className="h-3.5 w-3.5" />
@@ -272,16 +348,18 @@ function JobsContainer({
           {jobs.length > 0 && (
             <>
               <MyJobsTable
-                jobs={jobs}
+                jobs={filteredJobs}
                 jobStatuses={statuses}
                 deleteJob={onDeleteJob}
                 editJob={onEditJob}
                 onChangeJobStatus={onChangeJobStatus}
+                sortConfig={sortConfig}
+                onSort={handleSort}
               />
               <div className="text-xs text-muted-foreground">
                 Showing{" "}
                 <strong>
-                  {1} to {jobs.length}
+                  {1} to {filteredJobs.length}
                 </strong>{" "}
                 of
                 <strong> {totalJobs}</strong> jobs

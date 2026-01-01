@@ -32,10 +32,16 @@ import {
 } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { useState } from "react";
-import { JobResponse, JobStatus } from "@/models/job.model";
+import { Company, JobResponse, JobStatus } from "@/models/job.model";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 
 type MyJobsTableProps = {
   jobs: JobResponse[];
@@ -43,6 +49,27 @@ type MyJobsTableProps = {
   deleteJob: (id: string) => void;
   editJob: (id: string) => void;
   onChangeJobStatus: (id: string, status: JobStatus) => void;
+  sortConfig?: {
+    key:
+      | "title"
+      | "company"
+      | "status"
+      | "createdAt"
+      | "appliedDate"
+      | "location"
+      | "source";
+    direction: "asc" | "desc";
+  };
+  onSort?: (
+    key:
+      | "title"
+      | "company"
+      | "status"
+      | "createdAt"
+      | "appliedDate"
+      | "location"
+      | "source"
+  ) => void;
 };
 
 function MyJobsTable({
@@ -51,9 +78,13 @@ function MyJobsTable({
   deleteJob,
   editJob,
   onChangeJobStatus,
+  sortConfig,
+  onSort,
 }: MyJobsTableProps) {
   const [alertOpen, setAlertOpen] = useState(false);
   const [jobIdToDelete, setJobIdToDelete] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [companyDialogOpen, setCompanyDialogOpen] = useState(false);
 
   const router = useRouter();
   const viewJobDetails = (jobId: string) => {
@@ -85,6 +116,42 @@ function MyJobsTable({
     }
   };
 
+  const openCompanyDialog = (company?: Company | null) => {
+    if (!company) return;
+    setSelectedCompany(company);
+    setCompanyDialogOpen(true);
+  };
+
+  const SortButton = ({
+    label,
+    sortKey,
+  }: {
+    label: string;
+    sortKey:
+      | "title"
+      | "company"
+      | "status"
+      | "createdAt"
+      | "appliedDate"
+      | "location"
+      | "source";
+  }) => {
+    const isActive = sortConfig?.key === sortKey;
+    const direction = sortConfig?.direction === "asc" ? "↑" : "↓";
+    return (
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 hover:underline"
+        onClick={() => onSort?.(sortKey)}
+      >
+        <span>{label}</span>
+        {isActive && (
+          <span className="text-muted-foreground text-xs">{direction}</span>
+        )}
+      </button>
+    );
+  };
+
   return (
     <>
       <Table>
@@ -93,13 +160,27 @@ function MyJobsTable({
             <TableHead className="hidden w-[100px] sm:table-cell">
               <span className="sr-only">Company Logo</span>
             </TableHead>
-            <TableHead className="hidden md:table-cell">Date Added</TableHead>
-            <TableHead className="hidden md:table-cell">Date Applied</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Company</TableHead>
-            <TableHead className="hidden md:table-cell">Location</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="hidden md:table-cell">Source</TableHead>
+            <TableHead className="hidden md:table-cell">
+              <SortButton label="Date Added" sortKey="createdAt" />
+            </TableHead>
+            <TableHead className="hidden md:table-cell">
+              <SortButton label="Date Applied" sortKey="appliedDate" />
+            </TableHead>
+            <TableHead>
+              <SortButton label="Title" sortKey="title" />
+            </TableHead>
+            <TableHead>
+              <SortButton label="Company" sortKey="company" />
+            </TableHead>
+            <TableHead className="hidden md:table-cell">
+              <SortButton label="Location" sortKey="location" />
+            </TableHead>
+            <TableHead>
+              <SortButton label="Status" sortKey="status" />
+            </TableHead>
+            <TableHead className="hidden md:table-cell">
+              <SortButton label="Source" sortKey="source" />
+            </TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -136,7 +217,13 @@ function MyJobsTable({
                   </Link>
                 </TableCell>
                 <TableCell className="font-medium">
-                  {job.Company?.label}
+                  <button
+                    type="button"
+                    className="text-left hover:underline"
+                    onClick={() => openCompanyDialog(job.Company)}
+                  >
+                    {job.Company?.label}
+                  </button>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
                   {job.Location?.label}
@@ -252,6 +339,96 @@ function MyJobsTable({
         onOpenChange={setAlertOpen}
         onDelete={() => deleteJob(jobIdToDelete)}
       />
+      <Dialog open={companyDialogOpen} onOpenChange={setCompanyDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <img
+                alt="Company logo"
+                className="h-10 w-10 rounded-md border object-cover"
+                src={selectedCompany?.logoUrl || "/images/jobsync-logo.svg"}
+                onError={(e) => {
+                  e.currentTarget.src = "/images/jobsync-logo.svg";
+                }}
+              />
+              <span>{selectedCompany?.label || "Company"}</span>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedCompany && (
+            <div className="space-y-2 text-sm">
+              {selectedCompany.website && (
+                <div className="flex gap-2">
+                  <span className="font-medium w-28">Website</span>
+                  <a
+                    className="text-primary underline break-all"
+                    href={
+                      selectedCompany.website.startsWith("http")
+                        ? selectedCompany.website
+                        : `https://${selectedCompany.website}`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {selectedCompany.website}
+                  </a>
+                </div>
+              )}
+              {selectedCompany.archetype && (
+                <div className="flex gap-2">
+                  <span className="font-medium w-28">Archetype</span>
+                  <span>{selectedCompany.archetype}</span>
+                </div>
+              )}
+              {selectedCompany.ownership && (
+                <div className="flex gap-2">
+                  <span className="font-medium w-28">Ownership</span>
+                  <span>{selectedCompany.ownership}</span>
+                </div>
+              )}
+              {selectedCompany.industryRole && (
+                <div className="flex gap-2">
+                  <span className="font-medium w-28">Industry Role</span>
+                  <span>{selectedCompany.industryRole}</span>
+                </div>
+              )}
+              {selectedCompany.innovationLevel && (
+                <div className="flex gap-2">
+                  <span className="font-medium w-28">Innovation</span>
+                  <span>{selectedCompany.innovationLevel}</span>
+                </div>
+              )}
+              {selectedCompany.country && (
+                <div className="flex gap-2">
+                  <span className="font-medium w-28">Country</span>
+                  <span>{selectedCompany.country}</span>
+                </div>
+              )}
+              {selectedCompany.summary && (
+                <div className="flex gap-2">
+                  <span className="font-medium w-28">Summary</span>
+                  <span className="flex-1">{selectedCompany.summary}</span>
+                </div>
+              )}
+              {selectedCompany.fitNotes && (
+                <div className="flex gap-2">
+                  <span className="font-medium w-28">Notes</span>
+                  <span className="flex-1">{selectedCompany.fitNotes}</span>
+                </div>
+              )}
+              <div className="flex gap-4 pt-2">
+                <Badge variant="secondary">
+                  {selectedCompany.hasWorksCouncil ? "Betriebsrat: Yes" : "Betriebsrat: No"}
+                </Badge>
+                <Badge variant="secondary">
+                  {selectedCompany.hasCollectiveAgreement
+                    ? "Tarifvertrag: Yes"
+                    : "Tarifvertrag: No"}
+                </Badge>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

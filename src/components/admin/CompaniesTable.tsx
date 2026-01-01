@@ -27,12 +27,21 @@ type CompaniesTableProps = {
   companies: Company[];
   reloadCompanies: () => void;
   editCompany: (id: string) => void;
+  sortConfig: {
+    key: "label" | "country" | "jobsApplied" | "archetype" | "ownership" | "industryRole";
+    direction: "asc" | "desc";
+  };
+  onSort: (
+    key: "label" | "country" | "jobsApplied" | "archetype" | "ownership" | "industryRole"
+  ) => void;
 };
 
 function CompaniesTable({
   companies,
   reloadCompanies,
   editCompany,
+  sortConfig,
+  onSort,
 }: CompaniesTableProps) {
   const [alert, setAlert] = useState<AlertDialog>({
     openState: false,
@@ -76,45 +85,121 @@ function CompaniesTable({
     }
   };
 
+  const SortButton = ({
+    label,
+    sortKey,
+  }: {
+    label: string;
+    sortKey:
+      | "label"
+      | "country"
+      | "jobsApplied"
+      | "archetype"
+      | "ownership"
+      | "industryRole";
+  }) => {
+    const isActive = sortConfig.key === sortKey;
+    const direction = sortConfig.direction === "asc" ? "↑" : "↓";
+    return (
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className="inline-flex items-center gap-1 hover:underline"
+      >
+        <span>{label}</span>
+        {isActive && <span className="text-muted-foreground text-xs">{direction}</span>}
+      </button>
+    );
+  };
+
   return (
     <>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="hidden w-[100px] sm:table-cell">
-              <span className="sr-only">Company Logo</span>
-            </TableHead>
-            <TableHead>Company Name</TableHead>
-            <TableHead className="hidden sm:table-cell">Value</TableHead>
-            <TableHead>Jobs Applied</TableHead>
-            <TableHead>Actions</TableHead>
             <TableHead>
-              <span className="sr-only">Actions</span>
+              <SortButton label="Company" sortKey="label" />
             </TableHead>
+            <TableHead>
+              <SortButton label="Archetype" sortKey="archetype" />
+            </TableHead>
+            <TableHead>
+              <SortButton label="Ownership" sortKey="ownership" />
+            </TableHead>
+            <TableHead>
+              <SortButton label="Industry Role" sortKey="industryRole" />
+            </TableHead>
+            <TableHead>Innovation</TableHead>
+            <TableHead>
+              <SortButton label="Country" sortKey="country" />
+            </TableHead>
+            <TableHead>Works Council</TableHead>
+            <TableHead>Tarifvertrag</TableHead>
+            <TableHead>
+              <SortButton label="Jobs Applied" sortKey="jobsApplied" />
+            </TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {companies.map((company: Company) => {
             return (
               <TableRow key={company.id}>
-                <TableCell className="hidden sm:table-cell">
-                  <img
-                    alt="Company logo"
-                    className="aspect-square rounded-md object-cover"
-                    height={32}
-                    src={company.logoUrl || "/images/jobsync-logo.svg"}
-                    onError={(e) => {
-                      e.currentTarget.src = "/images/jobsync-logo.svg";
-                    }}
-                    width={32}
-                  />
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-3">
+                    <img
+                      alt="Company logo"
+                      className="aspect-square rounded-md object-cover border"
+                      height={36}
+                      src={company.logoUrl || "/images/jobsync-logo.svg"}
+                      onError={(e) => {
+                        e.currentTarget.src = "/images/jobsync-logo.svg";
+                      }}
+                      width={36}
+                    />
+                    <div className="flex flex-col">
+                      {company.website ? (
+                        <a
+                          className="font-semibold"
+                          href={
+                            company.website.startsWith("http")
+                              ? company.website
+                              : `https://${company.website}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {company.label}
+                        </a>
+                      ) : (
+                        <span className="font-semibold">{company.label}</span>
+                      )}
+                    </div>
+                  </div>
                 </TableCell>
-                <TableCell className="font-medium">{company.label}</TableCell>
-                <TableCell className="font-medium hidden sm:table-cell">
-                  {company.value}
+                <TableCell className="text-sm text-muted-foreground">
+                  {company.archetype || "—"}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {company.ownership || "—"}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {company.industryRole || "—"}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {company.innovationLevel || "—"}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {company.country || "—"}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {company.hasWorksCouncil ? "Yes" : "No"}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {company.hasCollectiveAgreement ? "Yes" : "No"}
                 </TableCell>
                 <TableCell className="font-medium">
-                  {company._count?.jobsApplied}
+                  {company._count?.jobsApplied ?? 0}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>

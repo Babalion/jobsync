@@ -49,6 +49,16 @@ export interface Company {
   value: string;
   createdBy: string;
   website?: string;
+  archetype?: string;
+  ownership?: string;
+  industryRole?: string;
+  innovationLevel?: string;
+  cultureTag?: string;
+  country?: string;
+  summary?: string;
+  fitNotes?: string;
+  hasWorksCouncil?: boolean;
+  hasCollectiveAgreement?: boolean;
   logoUrl?: string;
   _count?: {
     jobsApplied: number;

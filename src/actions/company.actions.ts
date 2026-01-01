@@ -47,6 +47,17 @@ export const getCompanyList = async (
                 label: true,
                 value: true,
                 logoUrl: true,
+                website: true,
+                archetype: true,
+                ownership: true,
+                cultureTag: true,
+                industryRole: true,
+                innovationLevel: true,
+                country: true,
+                summary: true,
+                fitNotes: true,
+                hasWorksCouncil: true,
+                hasCollectiveAgreement: true,
                 _count: {
                   select: {
                     jobsApplied: {
@@ -110,7 +121,20 @@ export const addCompany = async (
     }
     const dbUser = await ensureUserExists(user);
 
-    const { company, companyUrl } = data;
+    const {
+      company,
+      companyUrl,
+      archetype,
+      ownership,
+      industryRole,
+      innovationLevel,
+      cultureTag,
+      country,
+      summary,
+      fitNotes,
+      hasWorksCouncil,
+      hasCollectiveAgreement,
+    } = data;
 
     const value = company.trim().toLowerCase();
     const website = companyUrl?.trim() || undefined;
@@ -130,13 +154,27 @@ export const addCompany = async (
 
     const finalLogo = getFaviconFromUrl(website) || undefined;
 
+    const optionalFields: Record<string, string | boolean | undefined> = {
+      logoUrl: finalLogo,
+      website,
+      archetype: archetype?.trim() || undefined,
+      ownership: ownership?.trim() || undefined,
+      industryRole: industryRole?.trim() || undefined,
+      innovationLevel: innovationLevel?.trim() || undefined,
+      cultureTag: cultureTag?.trim() || undefined,
+      country: country?.trim() || undefined,
+      summary: summary?.trim() || undefined,
+      fitNotes: fitNotes?.trim() || undefined,
+      hasWorksCouncil: hasWorksCouncil ?? false,
+      hasCollectiveAgreement: hasCollectiveAgreement ?? false,
+    };
+
     const res = await prisma.company.create({
       data: {
         createdBy: dbUser.id,
         value,
         label: company,
-        logoUrl: finalLogo,
-        website,
+        ...optionalFields,
       },
     });
     revalidatePath("/dashboard/myjobs", "page");
@@ -158,7 +196,22 @@ export const updateCompany = async (
     }
     const dbUser = await ensureUserExists(user);
 
-    const { id, company, companyUrl, createdBy } = data;
+    const {
+      id,
+      company,
+      companyUrl,
+      createdBy,
+      archetype,
+      ownership,
+      industryRole,
+      innovationLevel,
+      cultureTag,
+      country,
+      summary,
+      fitNotes,
+      hasWorksCouncil,
+      hasCollectiveAgreement,
+    } = data;
 
     if (!id || dbUser.id != createdBy) {
       throw new Error("Id is not provided or no user privilages");
@@ -180,6 +233,21 @@ export const updateCompany = async (
       throw new Error("Company already exists!");
     }
 
+    const optionalFields: Record<string, string | boolean | undefined> = {
+      logoUrl: getFaviconFromUrl(website) || undefined,
+      website,
+      archetype: archetype?.trim() || undefined,
+      ownership: ownership?.trim() || undefined,
+      industryRole: industryRole?.trim() || undefined,
+      innovationLevel: innovationLevel?.trim() || undefined,
+      cultureTag: cultureTag?.trim() || undefined,
+      country: country?.trim() || undefined,
+      summary: summary?.trim() || undefined,
+      fitNotes: fitNotes?.trim() || undefined,
+      hasWorksCouncil: hasWorksCouncil ?? false,
+      hasCollectiveAgreement: hasCollectiveAgreement ?? false,
+    };
+
     const res = await prisma.company.update({
       where: {
         id,
@@ -187,8 +255,7 @@ export const updateCompany = async (
       data: {
         value,
         label: company,
-        logoUrl: getFaviconFromUrl(website) || undefined,
-        website,
+        ...optionalFields,
       },
     });
 

@@ -1,10 +1,9 @@
 "use client";
-import { useTransition, useState, useEffect } from "react";
+import { useTransition, useEffect } from "react";
 import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -26,6 +25,8 @@ import { Input } from "../ui/input";
 import { toast } from "../ui/use-toast";
 import { addCompany, updateCompany } from "@/actions/company.actions";
 import { Company } from "@/models/job.model";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Switch } from "../ui/switch";
 
 type AddCompanyProps = {
   reloadCompanies: () => void;
@@ -51,10 +52,20 @@ function AddCompany({
     defaultValues: {
       company: "",
       companyUrl: "",
+      archetype: "",
+      ownership: "",
+      industryRole: "",
+      innovationLevel: "",
+      cultureTag: "",
+      country: "",
+      summary: "",
+      fitNotes: "",
+      hasWorksCouncil: false,
+      hasCollectiveAgreement: false,
     },
   });
 
-  const { reset, formState, watch, setValue } = form;
+  const { reset, formState, watch } = form;
   const watchedCompanyUrl = watch("companyUrl");
 
   const getFaviconFromUrl = (siteUrl?: string) => {
@@ -73,6 +84,19 @@ function AddCompany({
     (watchedCompanyUrl ? getFaviconFromUrl(watchedCompanyUrl) : "") ||
     "/images/jobsync-logo.svg";
 
+  const archetypeOptions = [
+    "Konzern-R&D",
+    "Mittelstand/Hidden Champion",
+    "Deep-Tech Scale-up",
+    "Behörde/Regulator",
+    "Universität/Lehrstuhl",
+    "Forschungsinstitut",
+    "Defense-Prime/Systemhaus",
+  ];
+  const ownershipOptions = ["privat", "öffentlich", "gemeinnützig", "öffentlich finanziert"];
+  const innovationOptions = ["hoch", "mittel", "niedrig"];
+  const cultureOptions = ["engineering-first", "research-first", "policy-first", "sales-first"];
+
   useEffect(() => {
     if (editCompany) {
       reset(
@@ -81,6 +105,16 @@ function AddCompany({
           company: editCompany?.label ?? "",
           createdBy: editCompany?.createdBy,
           companyUrl: editCompany?.website ?? "",
+          archetype: editCompany?.archetype ?? "",
+          ownership: editCompany?.ownership ?? "",
+          industryRole: editCompany?.industryRole ?? "",
+          innovationLevel: editCompany?.innovationLevel ?? "",
+          cultureTag: editCompany?.cultureTag ?? "",
+          country: editCompany?.country ?? "",
+          summary: editCompany?.summary ?? "",
+          fitNotes: editCompany?.fitNotes ?? "",
+          hasWorksCouncil: editCompany?.hasWorksCouncil ?? false,
+          hasCollectiveAgreement: editCompany?.hasCollectiveAgreement ?? false,
         },
         { keepDefaultValues: true }
       );
@@ -135,79 +169,257 @@ function AddCompany({
         </span>
       </Button>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="lg:max-h-screen overflow-y-scroll">
+        <DialogContent className="lg:max-h-screen overflow-y-scroll lg:max-w-4xl w-full">
           <DialogHeader>
             <DialogTitle>{pageTitle}</DialogTitle>
-            <DialogDescription className="text-primary">
-              Caution: Editing name of the company will affect all the related
-              job records.
-            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
               className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2"
             >
-              {/* COMPANY NAME */}
-              <div className="md:col-span-2">
-                <FormField
-                  control={form.control}
-                  name="company"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* COMPANY WEBSITE FOR FAVICON */}
-              <div className="md:col-span-2">
-                <FormField
-                  control={form.control}
-                  name="companyUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Website</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            const favicon = getFaviconFromUrl(e.target.value);
-                            if (favicon) {
-                              setValue("companyUrl", e.target.value, {
-                                shouldDirty: true,
-                              });
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* LOGO PREVIEW */}
-              <div className="md:col-span-2 flex items-center gap-4">
+              <div className="md:col-span-2 flex gap-4 items-start">
                 <img
                   alt="Logo preview"
                   src={previewLogo || "/images/jobsync-logo.svg"}
-                  width={48}
-                  height={48}
-                  className="rounded-md border"
+                  width={64}
+                  height={64}
+                  className="rounded-md border mt-1"
                   onError={(e) => {
                     e.currentTarget.src = "/images/jobsync-logo.svg";
                   }}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Preview (logo URL or favicon)
-                </p>
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* COMPANY NAME */}
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="company"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* COMPANY WEBSITE FOR FAVICON */}
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="companyUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Website</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="archetype"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Archetype</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select archetype" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {archetypeOptions.map((opt) => (
+                            <SelectItem key={opt} value={opt}>
+                              {opt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="ownership"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ownership</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select ownership" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ownershipOptions.map((opt) => (
+                            <SelectItem key={opt} value={opt}>
+                              {opt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="industryRole"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Industry & Role</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Branche + Wertschöpfungsrolle" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="innovationLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Innovation Level</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select innovation level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {innovationOptions.map((opt) => (
+                            <SelectItem key={opt} value={opt}>
+                              {opt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="cultureTag"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Culture Tag</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select culture" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {cultureOptions.map((opt) => (
+                            <SelectItem key={opt} value={opt}>
+                              {opt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Country" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="summary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>TLDR Summary</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Kurzbeschreibung in 2 Sätzen" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fitNotes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fit Notes</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Notizen / Red Flags" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="hasWorksCouncil"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div>
+                        <FormLabel className="mb-0">Betriebsrat</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={!!field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="hasCollectiveAgreement"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div>
+                        <FormLabel className="mb-0">Tarifvertrag</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={!!field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </div>
               <div className="md:col-span-2 mt-4">
                 <DialogFooter
