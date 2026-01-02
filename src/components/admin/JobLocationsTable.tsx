@@ -23,15 +23,25 @@ import { MoreHorizontal, Trash } from "lucide-react";
 import { AlertDialog } from "@/models/alertDialog.model";
 import { toast } from "../ui/use-toast";
 import { deleteJobLocationById } from "@/actions/jobLocation.actions";
+import { Badge } from "../ui/badge";
 
 type JobLocationsTableProps = {
   jobLocations: JobLocation[];
   reloadJobLocations: () => void;
+  sortConfig: {
+    key: "label" | "zipCode" | "country" | "jobsApplied";
+    direction: "asc" | "desc";
+  };
+  onSort: (key: "label" | "zipCode" | "country" | "jobsApplied") => void;
+  onEditLocation?: (location: JobLocation) => void;
 };
 
 function JobLocationsTable({
   jobLocations,
   reloadJobLocations,
+  sortConfig,
+  onSort,
+  onEditLocation,
 }: JobLocationsTableProps) {
   const [alert, setAlert] = useState<AlertDialog>({
     openState: false,
@@ -72,15 +82,45 @@ function JobLocationsTable({
       }
     }
   };
+
+  const SortButton = ({
+    label,
+    sortKey,
+  }: {
+    label: string;
+    sortKey: "label" | "zipCode" | "country" | "jobsApplied";
+  }) => {
+    const isActive = sortConfig.key === sortKey;
+    const direction = sortConfig.direction === "asc" ? "↑" : "↓";
+    return (
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className="inline-flex items-center gap-1 hover:underline"
+      >
+        <span>{label}</span>
+        {isActive && <span className="text-muted-foreground text-xs">{direction}</span>}
+      </button>
+    );
+  };
   return (
     <>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Location</TableHead>
-            <TableHead className="hidden sm:table-cell">Value</TableHead>
-            <TableHead>Jobs Applied</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead>
+              <SortButton label="City" sortKey="label" />
+            </TableHead>
+            <TableHead>
+              <SortButton label="Zip" sortKey="zipCode" />
+            </TableHead>
+            <TableHead>
+              <SortButton label="Country" sortKey="country" />
+            </TableHead>
+            <TableHead>
+              <SortButton label="Jobs" sortKey="jobsApplied" />
+            </TableHead>
+            <TableHead></TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -91,11 +131,16 @@ function JobLocationsTable({
             return (
               <TableRow key={location.id}>
                 <TableCell className="font-medium">{location.label}</TableCell>
-                <TableCell className="font-medium hidden sm:table-cell">
-                  {location.value}
+                <TableCell className="text-sm text-muted-foreground">
+                  {location.zipCode || "—"}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {location.country || "—"}
                 </TableCell>
                 <TableCell className="font-medium">
-                  {location._count?.jobsApplied}
+                  <Badge variant="secondary">
+                    {location._count?.jobsApplied ?? 0}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -107,6 +152,12 @@ function JobLocationsTable({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => onEditLocation?.(location)}
+                      >
+                        Edit Location
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600 cursor-pointer"
                         onClick={() => onDeleteJobLocation(location)}

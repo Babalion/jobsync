@@ -81,6 +81,7 @@ export interface JobLocation {
   id: string;
   label: string;
   value: string;
+  zipCode?: string;
   stateProv?: string;
   country?: string;
   createdBy: string;

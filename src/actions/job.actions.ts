@@ -175,7 +175,9 @@ export const getJobDetails = async (
 };
 
 export const createLocation = async (
-  label: string
+  label: string,
+  zipCode?: string,
+  country?: string
 ): Promise<any | undefined> => {
   try {
     const user = await getCurrentUser();
@@ -186,13 +188,21 @@ export const createLocation = async (
     const dbUser = await ensureUserExists(user);
 
     const value = label.trim().toLowerCase();
+    const finalZip = (zipCode || label).trim();
+    const finalCountry = country?.trim();
 
     if (!value) {
       throw new Error("Please provide location name");
     }
 
     const location = await prisma.location.create({
-      data: { label, value, createdBy: dbUser.id },
+      data: {
+        label,
+        value,
+        zipCode: finalZip,
+        country: finalCountry,
+        createdBy: dbUser.id,
+      },
     });
 
     return { data: location, success: true };
@@ -217,6 +227,8 @@ export const addJob = async (
       title,
       company,
       location,
+      locationZip,
+      locationCountry,
       type,
       status,
       source,
@@ -227,6 +239,15 @@ export const addJob = async (
       jobUrl,
       applied,
     } = data;
+
+    // Ensure location has zip/country stored
+    await prisma.location.update({
+      where: { id: location },
+      data: {
+        zipCode: locationZip,
+        country: locationCountry,
+      },
+    });
 
     const job = await prisma.job.create({
       data: {
@@ -273,6 +294,8 @@ export const updateJob = async (
       title,
       company,
       location,
+      locationZip,
+      locationCountry,
       type,
       status,
       source,
@@ -283,6 +306,14 @@ export const updateJob = async (
       jobUrl,
       applied,
     } = data;
+
+    await prisma.location.update({
+      where: { id: location },
+      data: {
+        zipCode: locationZip,
+        country: locationCountry,
+      },
+    });
 
     const job = await prisma.job.update({
       where: {

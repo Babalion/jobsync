@@ -78,6 +78,8 @@ export function AddJob({
       salaryRange: "1",
       jobUrl: "",
       applied: false,
+      locationZip: "",
+      locationCountry: "",
     },
   });
 
@@ -94,6 +96,8 @@ export function AddJob({
           title: editJob.JobTitle.id,
           company: editJob.Company.id,
           location: editJob.Location.id,
+          locationZip: editJob.Location.zipCode || "",
+          locationCountry: editJob.Location.country || "",
           type: editJob.jobType,
           source: editJob.JobSource.id,
           status: editJob.Status.id,
@@ -107,6 +111,9 @@ export function AddJob({
         { keepDefaultValues: true }
       );
       setDialogOpen(true);
+    } else {
+      setValue("locationZip", "");
+      setValue("locationCountry", "");
     }
   }, [editJob, reset]);
 
@@ -246,7 +253,7 @@ export function AddJob({
                   />
                 </div>
                 {/* Location */}
-                <div>
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3">
                   <FormField
                     control={form.control}
                     name="location"
@@ -258,7 +265,37 @@ export function AddJob({
                             options={locations}
                             field={field}
                             creatable
+                            extraPayload={{
+                              locationZip: form.getValues("locationZip"),
+                              locationCountry: form.getValues("locationCountry"),
+                            }}
                           />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="locationZip"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Zip / Postal Code</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g. 10115" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="locationCountry"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Country</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g. Germany" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

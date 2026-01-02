@@ -58,6 +58,7 @@ model Location {
   id             String           @id @default(uuid())
   label          String
   value          String
+  zipCode        String?          @default("")
   stateProv      String?
   country        String?
   jobsApplied    Job[]

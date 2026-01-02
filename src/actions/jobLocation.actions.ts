@@ -48,6 +48,8 @@ export const getJobLocationsList = async (
                 id: true,
                 label: true,
                 value: true,
+                zipCode: true,
+                country: true,
                 _count: {
                   select: {
                     jobsApplied: {
@@ -110,6 +112,70 @@ export const deleteJobLocationById = async (
     return { res, success: true };
   } catch (error) {
     const msg = "Failed to delete job location.";
+    return handleError(error, msg);
+  }
+};
+
+export const createJobLocation = async (
+  label: string,
+  zipCode: string,
+  country?: string
+): Promise<any | undefined> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+    const dbUser = await ensureUserExists(user);
+    const value = label.trim().toLowerCase();
+    if (!value) {
+      throw new Error("Please provide location name");
+    }
+    const location = await prisma.location.create({
+      data: {
+        label,
+        value,
+        zipCode: zipCode.trim(),
+        country: country?.trim(),
+        createdBy: dbUser.id,
+      },
+    });
+    return { data: location, success: true };
+  } catch (error) {
+    const msg = "Failed to create job location. ";
+    return handleError(error, msg);
+  }
+};
+
+export const updateJobLocation = async (
+  id: string,
+  label: string,
+  zipCode: string,
+  country?: string,
+  createdBy?: string
+): Promise<any | undefined> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+    if (!id || (createdBy && createdBy !== user.id)) {
+      throw new Error("Id is not provided or no user privileges");
+    }
+
+    const value = label.trim().toLowerCase();
+    const updated = await prisma.location.update({
+      where: { id },
+      data: {
+        label,
+        value,
+        zipCode: zipCode.trim(),
+        country: country?.trim(),
+      },
+    });
+    return { data: updated, success: true };
+  } catch (error) {
+    const msg = "Failed to update job location. ";
     return handleError(error, msg);
   }
 };

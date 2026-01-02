@@ -30,9 +30,10 @@ interface ComboboxProps {
   options: any[];
   field: ControllerRenderProps<any, any>;
   creatable?: boolean;
+  extraPayload?: Record<string, any>;
 }
 
-export function Combobox({ options, field, creatable }: ComboboxProps) {
+export function Combobox({ options, field, creatable, extraPayload }: ComboboxProps) {
   const [newOption, setNewOption] = useState<string>("");
   const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
 
@@ -67,8 +68,18 @@ export function Combobox({ options, field, creatable }: ComboboxProps) {
             return;
           }
           break;
-        case "location":
-          const { data, success, message } = await createLocation(label);
+        case "location": {
+          const zipCode = extraPayload?.locationZip;
+          const country = extraPayload?.locationCountry;
+          if (!zipCode) {
+            toast({
+              variant: "destructive",
+              title: "Error!",
+              description: "Zip/postal code is required.",
+            });
+            return;
+          }
+          const { data, success, message } = await createLocation(label, zipCode, country);
           if (!success) {
             toast({
               variant: "destructive",
@@ -79,6 +90,7 @@ export function Combobox({ options, field, creatable }: ComboboxProps) {
           }
           response = data;
           break;
+        }
         default:
           break;
       }
