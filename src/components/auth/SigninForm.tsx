@@ -17,9 +17,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { SigninFormSchema } from "@/models/signinForm.schema";
 import Loading from "../Loading";
+import { useTranslations } from "@/lib/i18n";
 
 function SigninForm() {
   const [isPending, startTransition] = useTransition();
+  const { t } = useTranslations();
 
   const form = useForm<z.infer<typeof SigninFormSchema>>({
     resolver: zodResolver(SigninFormSchema),
@@ -62,7 +64,7 @@ function SigninForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="email">Email</FormLabel>
+                    <FormLabel htmlFor="email">{t("Email")}</FormLabel>
                     <FormControl>
                       <Input
                         id="email"
@@ -81,7 +83,7 @@ function SigninForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="password">Password</FormLabel>
+                    <FormLabel htmlFor="password">{t("Password")}</FormLabel>
                     <FormControl>
                       <Input id="password" type="password" {...field} />
                     </FormControl>
@@ -98,7 +100,7 @@ function SigninForm() {
               {/* <Input id="password" type="password" required /> */}
             </div>
             <Button type="submit" disabled={isPending} className="w-full">
-              {isPending ? <Loading /> : "Login"}
+              {isPending ? <Loading /> : t("Login")}
             </Button>
             <div
               className="flex h-8 items-end space-x-1"

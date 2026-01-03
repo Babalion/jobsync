@@ -27,7 +27,7 @@ import { SIDEBAR_LINKS } from "@/lib/constants";
 import { signOut } from "@/auth";
 import UserAvatar from "./UserAvatar";
 import { getCurrentUser } from "@/utils/user.utils";
-import { redirect } from "next/navigation";
+import { TranslatedText } from "@/lib/i18n";
 
 async function Header() {
   // const session = await auth();
@@ -38,7 +38,9 @@ async function Header() {
         <SheetTrigger asChild>
           <Button size="icon" variant="outline" className="sm:hidden">
             <PanelLeft className="h-5 w-5" />
-            <span className="sr-only">Toggle Menu</span>
+            <span className="sr-only">
+              <TranslatedText id="Toggle Menu" />
+            </span>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="sm:max-w-xs">
@@ -60,7 +62,7 @@ async function Header() {
                     className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
                   >
                     <item.icon className="h-5 w-5" />
-                    {item.label}
+                    <TranslatedText id={item.label} />
                   </Link>
                 </SheetClose>
               );
@@ -68,7 +70,9 @@ async function Header() {
           </nav>
         </SheetContent>
       </Sheet>
-      <h1 className="font-semibold">JobSync - Job Search Assistant</h1>
+      <h1 className="font-semibold">
+        <TranslatedText id="JobSync - Job Search Assistant" />
+      </h1>
       <div className="relative ml-auto flex-1 md:grow-0">
         {/* <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
@@ -84,15 +88,19 @@ async function Header() {
           <UserAvatar user={user} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>
+            <TranslatedText id="My Account" />
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
             <Settings className="w-5 mr-2" />
-            <Link href="/dashboard/settings">Settings</Link>
+            <Link href="/dashboard/settings">
+              <TranslatedText id="Settings" />
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Info className="w-5 mr-2" />
-            Support
+            <TranslatedText id="Support" />
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <form
@@ -104,7 +112,9 @@ async function Header() {
             <DropdownMenuItem>
               <Button variant="ghost" className="w-full">
                 <PowerIcon className="w-5" />
-                <div className="hidden md:block mx-2">Logout</div>
+                <div className="hidden md:block mx-2">
+                  <TranslatedText id="Logout" />
+                </div>
               </Button>
             </DropdownMenuItem>
           </form>

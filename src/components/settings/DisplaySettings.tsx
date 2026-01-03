@@ -16,10 +16,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "../ui/use-toast";
 import { Button } from "../ui/button";
 import { useTheme } from "next-themes";
+import { LANGUAGE_OPTIONS, useTranslations } from "@/lib/i18n";
+import { useEffect } from "react";
 
 const appearanceFormSchema = z.object({
   theme: z.enum(["light", "dark", "system"], {
     required_error: "Please select a theme.",
+  }),
+  language: z.enum(["en", "de"], {
+    required_error: "Please select a language.",
   }),
 });
 
@@ -31,28 +36,34 @@ const currentTheme =
     : "system";
 
 // This can come from your database or API.
-const defaultValues: Partial<AppearanceFormValues> = {
-  theme: currentTheme || "system",
-};
-
 function DisplaySettings() {
   const { setTheme, systemTheme } = useTheme();
+  const { language, setLanguage, t } = useTranslations();
   const form = useForm<AppearanceFormValues>({
     resolver: zodResolver(appearanceFormSchema),
-    defaultValues,
+    defaultValues: {
+      theme: currentTheme || "system",
+      language,
+    },
   });
+
+  useEffect(() => {
+    form.setValue("language", language);
+  }, [form, language]);
 
   function onSubmit(data: AppearanceFormValues) {
     setTheme(data.theme);
+    setLanguage(data.language);
     toast({
       variant: "success",
-      title: `Your selected theme has been saved.`,
+      title: t("Update preferences"),
+      description: `${t("Your selected theme has been saved.")} ${t("Language has been updated.")}`,
     });
   }
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Appearance</CardTitle>
+        <CardTitle>{t("Appearance")}</CardTitle>
       </CardHeader>
       <CardContent className="ml-4">
         <div className="mt-4">
@@ -63,9 +74,9 @@ function DisplaySettings() {
                 name="theme"
                 render={({ field }) => (
                   <FormItem className="space-y-1">
-                    <FormLabel>Theme</FormLabel>
+                    <FormLabel>{t("Theme")}</FormLabel>
                     <FormDescription>
-                      Select the theme for the app.
+                      {t("Select the theme for the app.")}
                     </FormDescription>
                     <FormMessage />
                     <RadioGroup
@@ -80,7 +91,7 @@ function DisplaySettings() {
                           </FormControl>
                           <LightThemeElement />
                           <span className="block w-full p-2 text-center font-normal">
-                            Light
+                            {t("Light")}
                           </span>
                         </FormLabel>
                       </FormItem>
@@ -91,7 +102,7 @@ function DisplaySettings() {
                           </FormControl>
                           <DarkThemeElement />
                           <span className="block w-full p-2 text-center font-normal">
-                            Dark
+                            {t("Dark")}
                           </span>
                         </FormLabel>
                       </FormItem>
@@ -109,7 +120,7 @@ function DisplaySettings() {
                             <LightThemeElement />
                           )}
                           <span className="block w-full p-2 text-center font-normal">
-                            System
+                            {t("System")}
                           </span>
                         </FormLabel>
                       </FormItem>
@@ -118,7 +129,40 @@ function DisplaySettings() {
                 )}
               />
 
-              <Button type="submit">Update preferences</Button>
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel>{t("Language")}</FormLabel>
+                    <FormDescription>
+                      {t("Select your preferred language.")}
+                    </FormDescription>
+                    <FormMessage />
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="grid max-w-lg md:grid-cols-2 gap-4 pt-2"
+                    >
+                      {LANGUAGE_OPTIONS.map((option) => (
+                        <FormItem
+                          key={option.code}
+                          className="flex items-center space-x-3 space-y-0 rounded-md border p-3"
+                        >
+                          <FormControl>
+                            <RadioGroupItem value={option.code} />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            {option.label}
+                          </FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit">{t("Update preferences")}</Button>
             </form>
           </Form>
         </div>

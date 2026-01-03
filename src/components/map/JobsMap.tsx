@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Input } from "../ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { format } from "date-fns";
+import { useTranslations } from "@/lib/i18n";
 
 type JobsMapProps = {
   jobs: JobResponse[];
@@ -38,6 +39,7 @@ const statusColor = (value?: string) => {
 };
 
 export default function JobsMap({ jobs, statuses }: JobsMapProps) {
+  const { t, dateLocale } = useTranslations();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -193,23 +195,23 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
     <div className="space-y-4">
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <CardTitle>Jobs Map</CardTitle>
+          <CardTitle>{t("Jobs Map")}</CardTitle>
           <div className="flex gap-2 w-full md:w-auto">
             <Input
-              placeholder="Search by title, company, location, zip..."
+              placeholder={t("Search by title, company, location, zip...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="h-9"
             />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px] h-9">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("Status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="all">{t("All statuses")}</SelectItem>
                 {statuses?.map((s) => (
                   <SelectItem key={s.id} value={s.value}>
-                    {s.label}
+                    {t(s.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -231,7 +233,7 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2">
                   <Badge className={statusColor(selectedMarker.job.Status?.value)}>
-                    {selectedMarker.job.Status?.label}
+                    {t(selectedMarker.job.Status?.label || "")}
                   </Badge>
                   <span className="text-sm text-muted-foreground">
                     {selectedMarker.job.JobSource?.label}
@@ -244,7 +246,7 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
                     setHighlightId(null);
                   }}
                 >
-                  Close
+                  {t("Close")}
                 </button>
               </div>
               <div className="text-lg font-semibold">
@@ -263,12 +265,12 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
                   : ""}
               </div>
               <div className="text-xs text-muted-foreground">
-                Added:{" "}
+                {t("Added:")}{" "}
                 {selectedMarker.job.createdAt
-                  ? format(selectedMarker.job.createdAt, "PP")
-                  : "Unknown"}
+                  ? format(selectedMarker.job.createdAt, "PP", { locale: dateLocale })
+                  : t("Unknown")}
                 {selectedMarker.job.appliedDate
-                  ? ` • Applied: ${format(selectedMarker.job.appliedDate, "PP")}`
+                  ? ` • ${t("Applied:")} ${format(selectedMarker.job.appliedDate, "PP", { locale: dateLocale })}`
                   : ""}
               </div>
             </div>

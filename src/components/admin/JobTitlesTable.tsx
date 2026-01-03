@@ -23,6 +23,7 @@ import { AlertDialog } from "@/models/alertDialog.model";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
 import { deleteJobTitleById } from "@/actions/jobtitle.actions";
 import { toast } from "../ui/use-toast";
+import { useTranslations } from "@/lib/i18n";
 
 type JobTitlesTableProps = {
   jobTitles: JobTitle[];
@@ -30,6 +31,7 @@ type JobTitlesTableProps = {
 };
 
 function JobTitlesTable({ jobTitles, reloadJobTitles }: JobTitlesTableProps) {
+  const { t } = useTranslations();
   const [alert, setAlert] = useState<AlertDialog>({
     openState: false,
     deleteAction: false,
@@ -39,9 +41,10 @@ function JobTitlesTable({ jobTitles, reloadJobTitles }: JobTitlesTableProps) {
     if (title._count?.jobs! > 0) {
       setAlert({
         openState: true,
-        title: "Applied jobs exist!",
-        description:
-          "Associated jobs applied must be 0 to be able to delete this job title",
+        title: t("Applied jobs exist!"),
+        description: t(
+          "Associated jobs applied must be 0 to be able to delete this job title"
+        ),
         deleteAction: false,
       });
     } else {
@@ -58,13 +61,13 @@ function JobTitlesTable({ jobTitles, reloadJobTitles }: JobTitlesTableProps) {
       if (success) {
         toast({
           variant: "success",
-          description: `Job title has been deleted successfully`,
+          description: t("Job title has been deleted successfully"),
         });
         reloadJobTitles();
       } else {
         toast({
           variant: "destructive",
-          title: "Error!",
+          title: t("Error!"),
           description: message,
         });
       }
@@ -76,11 +79,11 @@ function JobTitlesTable({ jobTitles, reloadJobTitles }: JobTitlesTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Job Title</TableHead>
-            <TableHead>Jobs Applied</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead>{t("Job Title")}</TableHead>
+            <TableHead>{t("Jobs Applied")}</TableHead>
+            <TableHead>{t("Actions")}</TableHead>
             <TableHead>
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{t("Actions")}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -97,17 +100,17 @@ function JobTitlesTable({ jobTitles, reloadJobTitles }: JobTitlesTableProps) {
                     <DropdownMenuTrigger asChild>
                       <Button aria-haspopup="true" size="icon" variant="ghost">
                         <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
+                        <span className="sr-only">{t("Toggle menu")}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                       <DropdownMenuItem
                         className="text-red-600 cursor-pointer"
                         onClick={() => onDeleteJobTitle(title)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
-                        Delete
+                        {t("Delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -118,7 +121,7 @@ function JobTitlesTable({ jobTitles, reloadJobTitles }: JobTitlesTableProps) {
         </TableBody>
       </Table>
       <DeleteAlertDialog
-        pageTitle="title"
+        pageTitle="Job Title"
         open={alert.openState}
         onOpenChange={() => setAlert({ openState: false, deleteAction: false })}
         onDelete={() => deleteJobTitle(alert.itemId!)}

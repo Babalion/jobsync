@@ -24,6 +24,7 @@ import { Input } from "../ui/input";
 import { toast } from "../ui/use-toast";
 import { createJobLocation, updateJobLocation } from "@/actions/jobLocation.actions";
 import { JobLocation } from "@/models/job.model";
+import { useTranslations } from "@/lib/i18n";
 
 const AddLocationSchema = z.object({
   id: z.string().optional(),
@@ -52,6 +53,7 @@ function AddLocation({
 }: AddLocationProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { t } = useTranslations();
 
   const form = useForm<z.infer<typeof AddLocationSchema>>({
     resolver: zodResolver(AddLocationSchema),
@@ -92,7 +94,7 @@ function AddLocation({
       if (success) {
         toast({
           variant: "success",
-          description: values.id ? "Location updated" : "Location created",
+          description: values.id ? t("Location updated") : t("Location created"),
         });
         if (data) {
           onCreated?.(data as JobLocation);
@@ -104,7 +106,7 @@ function AddLocation({
       } else {
         toast({
           variant: "destructive",
-          title: "Error!",
+          title: t("Error!"),
           description: message,
         });
       }
@@ -124,7 +126,7 @@ function AddLocation({
           <PlusCircle className="h-3.5 w-3.5" />
           {!compact && (
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Add Location
+              {t("Add Location")}
             </span>
           )}
         </Button>
@@ -132,7 +134,9 @@ function AddLocation({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{form.getValues("id") ? "Edit Location" : "Add Location"}</DialogTitle>
+            <DialogTitle>
+              {form.getValues("id") ? t("Edit Location") : t("Add Location")}
+            </DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form
@@ -147,7 +151,7 @@ function AddLocation({
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>City</FormLabel>
+                    <FormLabel>{t("City")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -160,7 +164,7 @@ function AddLocation({
                 name="zipCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Zip / Postal Code</FormLabel>
+                    <FormLabel>{t("Zip / Postal Code")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -173,7 +177,7 @@ function AddLocation({
                 name="country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Country</FormLabel>
+                    <FormLabel>{t("Country")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -188,10 +192,10 @@ function AddLocation({
                   onClick={() => setOpen(false)}
                   className="mt-2 md:mt-0"
                 >
-                  Cancel
+                  {t("Cancel")}
                 </Button>
                 <Button type="submit" disabled={isPending}>
-                  Save
+                  {t("Save")}
                   {isPending && <Loader className="h-4 w-4 shrink-0 spinner" />}
                 </Button>
               </DialogFooter>

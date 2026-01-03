@@ -1,3 +1,4 @@
+"use client";
 import React, { ForwardRefExoticComponent, RefAttributes } from "react";
 import Link from "next/link";
 
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 import { LucideProps } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 interface NavLinkProps {
   label: string;
@@ -19,6 +21,8 @@ interface NavLinkProps {
 }
 
 function NavLink({ label, Icon, route, pathname }: NavLinkProps) {
+  const { t } = useTranslations();
+  const translatedLabel = t(label);
   const isActive =
     route === pathname || pathname.startsWith(`${route}/dashboard`);
   return (
@@ -35,10 +39,10 @@ function NavLink({ label, Icon, route, pathname }: NavLinkProps) {
               "text-black dark:text-white": isActive,
             })}
           />
-          <span className="sr-only">{label}</span>
+          <span className="sr-only">{translatedLabel}</span>
         </Link>
       </TooltipTrigger>
-      <TooltipContent side="right">{label}</TooltipContent>
+      <TooltipContent side="right">{translatedLabel}</TooltipContent>
     </Tooltip>
   );
 }

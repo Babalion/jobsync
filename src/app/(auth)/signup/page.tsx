@@ -21,6 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useTranslations } from "@/lib/i18n";
 
 const FormSchema = z.object({
   name: z.string().min(2, {
@@ -44,6 +45,7 @@ const FormSchema = z.object({
 });
 
 export default function Signup() {
+  const { t } = useTranslations();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     // defaultValues: {
@@ -58,9 +60,9 @@ export default function Signup() {
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
-        <CardTitle className="text-xl">Sign Up</CardTitle>
+        <CardTitle className="text-xl">{t("Sign Up")}</CardTitle>
         <CardDescription>
-          Enter your information to create an account
+          {t("Enter your information to create an account")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -75,9 +77,9 @@ export default function Signup() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>{t("Full Name")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Your Name" {...field} />
+                        <Input placeholder={t("Full Name")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -90,7 +92,7 @@ export default function Signup() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>{t("Email")}</FormLabel>
                       <FormControl>
                         <Input placeholder="id@example.com" {...field} />
                       </FormControl>
@@ -105,7 +107,7 @@ export default function Signup() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>{t("Password")}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
@@ -115,16 +117,16 @@ export default function Signup() {
                 />
               </div>
               <Button type="submit" className="w-full">
-                Create an account
+                {t("Create an account")}
               </Button>
             </div>
           </form>
         </Form>
 
         <div className="mt-4 text-center text-sm">
-          Already have an account?{" "}
+          {t("Already have an account?")}{" "}
           <Link href="/signin" className="underline">
-            Sign in
+            {t("Sign in")}
           </Link>
         </div>
       </CardContent>

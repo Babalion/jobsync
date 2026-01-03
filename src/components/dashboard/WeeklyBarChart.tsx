@@ -2,6 +2,7 @@
 import { barChartData } from "@/lib/data/barChartData";
 import { ResponsiveBar } from "@nivo/bar";
 import { Card, CardContent } from "../ui/card";
+import { useTranslations } from "@/lib/i18n";
 
 type WeeklyBarChartProps = {
   data: any[];
@@ -16,6 +17,7 @@ export default function WeeklyBarChart({
   groupMode,
   axisLeftLegend,
 }: WeeklyBarChartProps) {
+  const { t } = useTranslations();
   return (
     <Card className="mb-2 lg:mb-0">
       <CardContent className="h-[240px] p-3">
@@ -57,7 +59,7 @@ export default function WeeklyBarChart({
             tickSize: 5,
             tickPadding: 5,
             tickRotation: 0,
-            legend: "DAYS OF WEEK",
+            legend: t("DAYS OF WEEK"),
             legendPosition: "middle",
             legendOffset: 32,
             truncateTickAt: 0,
@@ -66,7 +68,7 @@ export default function WeeklyBarChart({
             tickSize: 5,
             tickPadding: 5,
             tickRotation: 0,
-            legend: axisLeftLegend,
+            legend: t(axisLeftLegend),
             legendPosition: "middle",
             legendOffset: -40,
             truncateTickAt: 0,

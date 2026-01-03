@@ -42,6 +42,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
+import { useTranslations } from "@/lib/i18n";
 
 type MyJobsTableProps = {
   jobs: JobResponse[];
@@ -81,6 +82,7 @@ function MyJobsTable({
   sortConfig,
   onSort,
 }: MyJobsTableProps) {
+  const { t, dateLocale } = useTranslations();
   const [alertOpen, setAlertOpen] = useState(false);
   const [jobIdToDelete, setJobIdToDelete] = useState("");
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -158,31 +160,31 @@ function MyJobsTable({
         <TableHeader>
           <TableRow>
             <TableHead className="hidden w-[100px] sm:table-cell">
-              <span className="sr-only">Company Logo</span>
+              <span className="sr-only">{t("Company Logo")}</span>
             </TableHead>
             <TableHead className="hidden md:table-cell">
-              <SortButton label="Date Added" sortKey="createdAt" />
+              <SortButton label={t("Date Added")} sortKey="createdAt" />
             </TableHead>
             <TableHead className="hidden md:table-cell">
-              <SortButton label="Date Applied" sortKey="appliedDate" />
+              <SortButton label={t("Date Applied")} sortKey="appliedDate" />
             </TableHead>
             <TableHead>
-              <SortButton label="Title" sortKey="title" />
+              <SortButton label={t("Title")} sortKey="title" />
             </TableHead>
             <TableHead>
-              <SortButton label="Company" sortKey="company" />
+              <SortButton label={t("Company")} sortKey="company" />
             </TableHead>
             <TableHead className="hidden md:table-cell">
-              <SortButton label="Location" sortKey="location" />
+              <SortButton label={t("Location")} sortKey="location" />
             </TableHead>
             <TableHead>
-              <SortButton label="Status" sortKey="status" />
+              <SortButton label={t("Status")} sortKey="status" />
             </TableHead>
             <TableHead className="hidden md:table-cell">
-              <SortButton label="Source" sortKey="source" />
+              <SortButton label={t("Source")} sortKey="source" />
             </TableHead>
             <TableHead>
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{t("Actions")}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -192,7 +194,7 @@ function MyJobsTable({
               <TableRow key={job.id}>
                 <TableCell className="hidden sm:table-cell">
                   <img
-                    alt="Company logo"
+                    alt={t("Company Logo")}
                     className="aspect-square rounded-md object-cover"
                     height={32}
                     src={job.Company?.logoUrl || "/images/jobsync-logo.svg"}
@@ -203,10 +205,14 @@ function MyJobsTable({
                   />
                 </TableCell>
                 <TableCell className="hidden md:table-cell w-[120px]">
-                  {job.createdAt ? format(job.createdAt, "PP") : "N/A"}
+                  {job.createdAt
+                    ? format(job.createdAt, "PP", { locale: dateLocale })
+                    : t("Unknown")}
                 </TableCell>
                 <TableCell className="hidden md:table-cell w-[120px]">
-                  {job.appliedDate ? format(job.appliedDate, "PP") : "N/A"}
+                  {job.appliedDate
+                    ? format(job.appliedDate, "PP", { locale: dateLocale })
+                    : t("Unknown")}
                 </TableCell>
                 <TableCell
                   className="font-medium cursor-pointer"
@@ -230,7 +236,7 @@ function MyJobsTable({
                 </TableCell>
                 <TableCell>
                   {new Date() > job.dueDate && job.Status?.value === "draft" ? (
-                    <Badge className="bg-slate-500">Expired</Badge>
+                    <Badge className="bg-slate-500">{t("Expired")}</Badge>
                   ) : (
                     <Badge
                       className={cn(
@@ -238,7 +244,7 @@ function MyJobsTable({
                         statusColor(job.Status?.value)
                       )}
                     >
-                      {job.Status?.label}
+                      {t(job.Status?.label || "")}
                     </Badge>
                   )}
                 </TableCell>
@@ -255,34 +261,34 @@ function MyJobsTable({
                         data-testid="job-actions-menu-btn"
                       >
                         <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
+                        <span className="sr-only">{t("Toggle menu")}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[200px]">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                       <DropdownMenuGroup>
                         <DropdownMenuItem
                           className="cursor-pointer"
                           onClick={() => viewJobDetails(job?.id)}
                         >
                           <ListCollapse className="mr-2 h-4 w-4" />
-                          View Details
+                          {t("View Details")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="cursor-pointer"
                           onClick={() => editJob(job.id)}
                         >
                           <Pencil className="mr-2 h-4 w-4" />
-                          Edit Job
+                          {t("Edit Job")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuSub>
-                          <DropdownMenuSubTrigger>
-                            <Tags className="mr-2 h-4 w-4" />
-                            Change status
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent className="p-0">
+                            <DropdownMenuSubTrigger>
+                              <Tags className="mr-2 h-4 w-4" />
+                              {t("Change status")}
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuSubContent className="p-0">
                               {jobStatuses.map((status) => (
                                 <DropdownMenuItem
                                   className="cursor-pointer"
@@ -292,11 +298,11 @@ function MyJobsTable({
                                   }}
                                   disabled={status.id === job.Status.id}
                                 >
-                                  <span>{status.label}</span>
+                                  <span>{t(status.label)}</span>
                                 </DropdownMenuItem>
                               ))}
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
+                              </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
                           {/* <Command>
                               <CommandList>
                                 <CommandGroup>
@@ -322,7 +328,7 @@ function MyJobsTable({
                           onClick={() => onDeleteJob(job.id)}
                         >
                           <Trash className="mr-2 h-4 w-4" />
-                          Delete
+                          {t("Delete")}
                         </DropdownMenuItem>
                       </DropdownMenuGroup>
                     </DropdownMenuContent>
@@ -334,7 +340,7 @@ function MyJobsTable({
         </TableBody>
       </Table>
       <DeleteAlertDialog
-        pageTitle="job"
+        pageTitle="Job"
         open={alertOpen}
         onOpenChange={setAlertOpen}
         onDelete={() => deleteJob(jobIdToDelete)}
@@ -344,21 +350,21 @@ function MyJobsTable({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <img
-                alt="Company logo"
+                alt={t("Company Logo")}
                 className="h-10 w-10 rounded-md border object-cover"
                 src={selectedCompany?.logoUrl || "/images/jobsync-logo.svg"}
                 onError={(e) => {
                   e.currentTarget.src = "/images/jobsync-logo.svg";
                 }}
               />
-              <span>{selectedCompany?.label || "Company"}</span>
+              <span>{selectedCompany?.label || t("Company")}</span>
             </DialogTitle>
           </DialogHeader>
           {selectedCompany && (
             <div className="space-y-2 text-sm">
               {selectedCompany.website && (
                 <div className="flex gap-2">
-                  <span className="font-medium w-28">Website</span>
+                  <span className="font-medium w-28">{t("Website")}</span>
                   <a
                     className="text-primary underline break-all"
                     href={
@@ -375,54 +381,56 @@ function MyJobsTable({
               )}
               {selectedCompany.archetype && (
                 <div className="flex gap-2">
-                  <span className="font-medium w-28">Archetype</span>
+                  <span className="font-medium w-28">{t("Archetype")}</span>
                   <span>{selectedCompany.archetype}</span>
                 </div>
               )}
               {selectedCompany.ownership && (
                 <div className="flex gap-2">
-                  <span className="font-medium w-28">Ownership</span>
+                  <span className="font-medium w-28">{t("Ownership")}</span>
                   <span>{selectedCompany.ownership}</span>
                 </div>
               )}
               {selectedCompany.industryRole && (
                 <div className="flex gap-2">
-                  <span className="font-medium w-28">Industry Role</span>
+                  <span className="font-medium w-28">{t("Industry Role")}</span>
                   <span>{selectedCompany.industryRole}</span>
                 </div>
               )}
               {selectedCompany.innovationLevel && (
                 <div className="flex gap-2">
-                  <span className="font-medium w-28">Innovation</span>
+                  <span className="font-medium w-28">{t("Innovation")}</span>
                   <span>{selectedCompany.innovationLevel}</span>
                 </div>
               )}
               {selectedCompany.country && (
                 <div className="flex gap-2">
-                  <span className="font-medium w-28">Country</span>
+                  <span className="font-medium w-28">{t("Country")}</span>
                   <span>{selectedCompany.country}</span>
                 </div>
               )}
               {selectedCompany.summary && (
                 <div className="flex gap-2">
-                  <span className="font-medium w-28">Summary</span>
+                  <span className="font-medium w-28">{t("Summary")}</span>
                   <span className="flex-1">{selectedCompany.summary}</span>
                 </div>
               )}
               {selectedCompany.fitNotes && (
                 <div className="flex gap-2">
-                  <span className="font-medium w-28">Notes</span>
+                  <span className="font-medium w-28">{t("Notes")}</span>
                   <span className="flex-1">{selectedCompany.fitNotes}</span>
                 </div>
               )}
               <div className="flex gap-4 pt-2">
                 <Badge variant="secondary">
-                  {selectedCompany.hasWorksCouncil ? "Betriebsrat: Yes" : "Betriebsrat: No"}
+                  {selectedCompany.hasWorksCouncil
+                    ? t("Betriebsrat: Yes")
+                    : t("Betriebsrat: No")}
                 </Badge>
                 <Badge variant="secondary">
                   {selectedCompany.hasCollectiveAgreement
-                    ? "Tarifvertrag: Yes"
-                    : "Tarifvertrag: No"}
+                    ? t("Tarifvertrag: Yes")
+                    : t("Tarifvertrag: No")}
                 </Badge>
               </div>
             </div>

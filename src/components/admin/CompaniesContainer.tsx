@@ -10,8 +10,10 @@ import Loading from "../Loading";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { useTranslations } from "@/lib/i18n";
 
 function CompaniesContainer() {
+  const { t } = useTranslations();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [totalCompanies, setTotalCompanies] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
@@ -127,7 +129,7 @@ function CompaniesContainer() {
       <div className="col-span-3">
         <Card x-chunk="dashboard-06-chunk-0">
           <CardHeader className="flex-row justify-between items-center">
-            <CardTitle>Companies</CardTitle>
+            <CardTitle>{t("Companies")}</CardTitle>
             <div className="flex items-center">
               <div className="ml-auto flex items-center gap-2">
                 <AddCompany
@@ -143,7 +145,7 @@ function CompaniesContainer() {
           <CardContent>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
               <Input
-                placeholder="Search by name, website, country..."
+                placeholder={t("Search by name, website, country...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="md:max-w-sm"
@@ -151,10 +153,10 @@ function CompaniesContainer() {
               <div className="flex gap-2">
                 <Select value={ownershipFilter} onValueChange={setOwnershipFilter}>
                   <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Ownership" />
+                    <SelectValue placeholder={t("Ownership")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All ownership</SelectItem>
+                    <SelectItem value="all">{t("All ownership")}</SelectItem>
                     <SelectItem value="privat">privat</SelectItem>
                     <SelectItem value="öffentlich">öffentlich</SelectItem>
                     <SelectItem value="gemeinnützig">gemeinnützig</SelectItem>
@@ -163,10 +165,10 @@ function CompaniesContainer() {
                 </Select>
                 <Select value={archetypeFilter} onValueChange={setArchetypeFilter}>
                   <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Archetype" />
+                    <SelectValue placeholder={t("Archetype")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All archetypes</SelectItem>
+                    <SelectItem value="all">{t("All archetypes")}</SelectItem>
                     <SelectItem value="konzern-r&d">Konzern-R&D</SelectItem>
                     <SelectItem value="mittelstand/hidden champion">Mittelstand/Hidden Champion</SelectItem>
                     <SelectItem value="deep-tech scale-up">Deep-Tech Scale-up</SelectItem>
@@ -191,16 +193,17 @@ function CompaniesContainer() {
                   />
                 ) : (
                   <div className="text-sm text-muted-foreground">
-                    No companies match your filters.
+                    {t("No companies match your filters.")}
                   </div>
                 )}
                 <div className="text-xs text-muted-foreground">
-                  Showing{" "}
-                  <strong>
-                    {1} to {filteredCompanies.length}
-                  </strong>{" "}
-                  of
-                  <strong> {totalCompanies}</strong> companies
+                  {t("Showing {start} to {end} of {total} companies", {
+                    values: {
+                      start: 1,
+                      end: filteredCompanies.length,
+                      total: totalCompanies,
+                    },
+                  })}
                 </div>
               </>
             )}
@@ -213,7 +216,7 @@ function CompaniesContainer() {
                   disabled={loading}
                   className="btn btn-primary"
                 >
-                  {loading ? "Loading..." : "Load More"}
+                  {loading ? t("Loading...") : t("Load More")}
                 </Button>
               </div>
             )}

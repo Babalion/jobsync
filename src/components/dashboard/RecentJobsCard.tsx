@@ -1,14 +1,17 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { JobResponse } from "@/models/job.model";
 import { format } from "date-fns";
 import Link from "next/link";
+import { useTranslations } from "@/lib/i18n";
 
 export default function RecentJobsCard({ jobs }: { jobs: JobResponse[] }) {
+  const { t, dateLocale } = useTranslations();
   return (
     <Card className="mb-2">
       <CardHeader>
-        <CardTitle>Recent Jobs Applied</CardTitle>
+        <CardTitle>{t("Recent Jobs Applied")}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-6">
         {jobs.map((job) => (
@@ -34,7 +37,7 @@ export default function RecentJobsCard({ jobs }: { jobs: JobResponse[] }) {
               </div>
             </Link>
             <div className="ml-auto text-sm font-medium">
-              {format(job?.appliedDate, "PP")}
+              {format(job?.appliedDate, "PP", { locale: dateLocale })}
             </div>
           </div>
         ))}

@@ -6,12 +6,12 @@ import { JobLocation } from "@/models/job.model";
 import JobLocationsTable from "./JobLocationsTable";
 import { getJobLocationsList } from "@/actions/jobLocation.actions";
 import Loading from "../Loading";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { toast } from "../ui/use-toast";
 import AddLocation from "./AddLocation";
+import { useTranslations } from "@/lib/i18n";
 
 function JobLocationsContainer() {
+  const { t } = useTranslations();
   const [locations, setLocations] = useState<JobLocation[]>([]);
   const [totalJobLocations, setTotalJobLocations] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
@@ -105,11 +105,11 @@ function JobLocationsContainer() {
       <div className="col-span-3">
         <Card x-chunk="dashboard-06-chunk-0">
           <CardHeader className="flex-row justify-between items-center">
-            <CardTitle>Job Locations</CardTitle>
+            <CardTitle>{t("Job Locations")}</CardTitle>
             <div className="flex items-center">
               <div className="ml-auto flex items-center gap-2">
                 <Input
-                  placeholder="Search city, zip, country..."
+                  placeholder={t("Search city, zip, country...")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="h-8 w-[220px]"
@@ -136,12 +136,13 @@ function JobLocationsContainer() {
                   onEditLocation={onEditLocation}
                 />
                 <div className="text-xs text-muted-foreground">
-                  Showing{" "}
-                  <strong>
-                    {1} to {filteredLocations.length}
-                  </strong>{" "}
-                  of
-                  <strong> {totalJobLocations}</strong> job locations
+                  {t("Showing {start} to {end} of {total} job locations", {
+                    values: {
+                      start: 1,
+                      end: filteredLocations.length,
+                      total: totalJobLocations,
+                    },
+                  })}
                 </div>
               </>
             )}

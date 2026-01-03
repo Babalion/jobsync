@@ -22,6 +22,7 @@ import { deleteCompanyById } from "@/actions/company.actions";
 import { toast } from "../ui/use-toast";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
 import { AlertDialog } from "@/models/alertDialog.model";
+import { useTranslations } from "@/lib/i18n";
 
 type CompaniesTableProps = {
   companies: Company[];
@@ -43,6 +44,7 @@ function CompaniesTable({
   sortConfig,
   onSort,
 }: CompaniesTableProps) {
+  const { t } = useTranslations();
   const [alert, setAlert] = useState<AlertDialog>({
     openState: false,
     deleteAction: false,
@@ -52,9 +54,10 @@ function CompaniesTable({
     if (company._count?.jobsApplied! > 0) {
       setAlert({
         openState: true,
-        title: "Applied jobs exist!",
-        description:
-          "Associated jobs applied must be 0 to be able to delete this company",
+        title: t("Applied jobs exist!"),
+        description: t(
+          "Associated jobs applied must be 0 to be able to delete this company"
+        ),
         deleteAction: false,
       });
     } else {
@@ -72,13 +75,13 @@ function CompaniesTable({
       if (success) {
         toast({
           variant: "success",
-          description: `Company has been deleted successfully`,
+          description: t("Company has been deleted successfully"),
         });
         reloadCompanies();
       } else {
         toast({
           variant: "destructive",
-          title: "Error!",
+          title: t("Error!"),
           description: message,
         });
       }
@@ -118,25 +121,25 @@ function CompaniesTable({
         <TableHeader>
           <TableRow>
             <TableHead>
-              <SortButton label="Company" sortKey="label" />
+              <SortButton label={t("Company")} sortKey="label" />
             </TableHead>
             <TableHead>
-              <SortButton label="Archetype" sortKey="archetype" />
+              <SortButton label={t("Archetype")} sortKey="archetype" />
             </TableHead>
             <TableHead>
-              <SortButton label="Ownership" sortKey="ownership" />
+              <SortButton label={t("Ownership")} sortKey="ownership" />
             </TableHead>
             <TableHead>
-              <SortButton label="Industry Role" sortKey="industryRole" />
+              <SortButton label={t("Industry Role")} sortKey="industryRole" />
             </TableHead>
-            <TableHead>Innovation</TableHead>
+            <TableHead>{t("Innovation")}</TableHead>
             <TableHead>
-              <SortButton label="Country" sortKey="country" />
+              <SortButton label={t("Country")} sortKey="country" />
             </TableHead>
-            <TableHead>Works Council</TableHead>
-            <TableHead>Tarifvertrag</TableHead>
+            <TableHead>{t("Works Council")}</TableHead>
+            <TableHead>{t("Collective Agreement")}</TableHead>
             <TableHead>
-              <SortButton label="Jobs Applied" sortKey="jobsApplied" />
+              <SortButton label={t("Jobs Applied")} sortKey="jobsApplied" />
             </TableHead>
             <TableHead></TableHead>
           </TableRow>
@@ -148,7 +151,7 @@ function CompaniesTable({
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-3">
                     <img
-                      alt="Company logo"
+                      alt={t("Company Logo")}
                       className="aspect-square rounded-md object-cover border"
                       height={36}
                       src={company.logoUrl || "/images/jobsync-logo.svg"}
@@ -193,10 +196,10 @@ function CompaniesTable({
                   {company.country || "—"}
                 </TableCell>
                 <TableCell className="text-sm">
-                  {company.hasWorksCouncil ? "Yes" : "No"}
+                  {company.hasWorksCouncil ? t("Yes") : t("No")}
                 </TableCell>
                 <TableCell className="text-sm">
-                  {company.hasCollectiveAgreement ? "Yes" : "No"}
+                  {company.hasCollectiveAgreement ? t("Yes") : t("No")}
                 </TableCell>
                 <TableCell className="font-medium">
                   {company._count?.jobsApplied ?? 0}
@@ -206,24 +209,24 @@ function CompaniesTable({
                     <DropdownMenuTrigger asChild>
                       <Button aria-haspopup="true" size="icon" variant="ghost">
                         <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
+                        <span className="sr-only">{t("Toggle menu")}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem
-                        className="cursor-pointer"
-                        onClick={() => editCompany(company.id)}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit Company
-                      </DropdownMenuItem>
+                      <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => editCompany(company.id)}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      {t("Edit Company")}
+                    </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600 cursor-pointer"
                         onClick={() => onDeleteCompany(company)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
-                        Delete
+                        {t("Delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -234,7 +237,7 @@ function CompaniesTable({
         </TableBody>
       </Table>
       <DeleteAlertDialog
-        pageTitle="company"
+        pageTitle="Company"
         open={alert.openState}
         onOpenChange={() => setAlert({ openState: false, deleteAction: false })}
         onDelete={() => deleteCompany(alert.itemId)}

@@ -1,3 +1,4 @@
+"use client";
 import {
   Card,
   CardContent,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { TrendingDown, TrendingUp } from "lucide-react";
+import { useTranslations } from "@/lib/i18n";
 
 interface NumberCardProps {
   label: string;
@@ -16,10 +18,12 @@ interface NumberCardProps {
 }
 
 export default function NumberCard({ label, num, trend }: NumberCardProps) {
+  const { t } = useTranslations();
+  const translatedLabel = t(label);
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardDescription>{label}</CardDescription>
+        <CardDescription>{translatedLabel}</CardDescription>
         <CardTitle className="text-4xl">{num}</CardTitle>
       </CardHeader>
       <CardContent>
@@ -33,7 +37,7 @@ export default function NumberCard({ label, num, trend }: NumberCardProps) {
         </div>
       </CardContent>
       <CardFooter>
-        <Progress value={trend} aria-label={`${trend}% increase`} />
+        <Progress value={trend} aria-label={`${trend}%`} />
       </CardFooter>
     </Card>
   );

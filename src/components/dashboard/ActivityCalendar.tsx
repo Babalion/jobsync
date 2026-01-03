@@ -2,6 +2,7 @@
 import { ResponsiveCalendar } from "@nivo/calendar";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { useTranslations } from "@/lib/i18n";
 // make sure parent container have a defined height when using
 // responsive component, otherwise height will be 0 and
 // no chart will be rendered.
@@ -15,11 +16,12 @@ export default function ActivityCalendar({
   data: any[];
 }) {
   const { resolvedTheme } = useTheme();
+  const { t } = useTranslations();
   const borderColor = resolvedTheme === "light" ? "#ffffff" : "#0e1117";
   return (
     <Card className="w-[100%]">
       <CardHeader>
-        <CardTitle>Applications Calendar</CardTitle>
+        <CardTitle>{t("Applications Calendar")}</CardTitle>
       </CardHeader>
       <CardContent className="h-[200px]">
         <ResponsiveCalendar

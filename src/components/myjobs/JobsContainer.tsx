@@ -42,6 +42,7 @@ import { ImportJobJSON } from "./ImportJobJSON";
 import MyJobsTable from "./MyJobsTable";
 import { format } from "date-fns";
 import { Input } from "../ui/input";
+import { useTranslations } from "@/lib/i18n";
 
 type MyJobsProps = {
   statuses: JobStatus[];
@@ -58,6 +59,7 @@ function JobsContainer({
   locations,
   sources,
 }: MyJobsProps) {
+  const { t } = useTranslations();
   const pathname = usePathname();
   const queryParams = useSearchParams();
   const router = useRouter();
@@ -73,7 +75,7 @@ function JobsContainer({
   const [jobs, setJobs] = useState<JobResponse[]>([]);
   const [page, setPage] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
-  const [filterKey, setFilterKey] = useState<string>();
+  const [filterKey, setFilterKey] = useState<string>("all");
   const [editJob, setEditJob] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,7 +109,7 @@ function JobsContainer({
       } else {
         toast({
           variant: "destructive",
-          title: "Error!",
+          title: t("Error!"),
           description: message,
         });
         setLoading(false);
@@ -119,8 +121,8 @@ function JobsContainer({
 
   const reloadJobs = useCallback(async () => {
     await loadJobs(1);
-    if (filterKey !== "none") {
-      setFilterKey("none");
+    if (filterKey !== "all") {
+      setFilterKey("all");
     }
   }, [loadJobs, filterKey]);
 
@@ -129,12 +131,12 @@ function JobsContainer({
     if (success) {
       toast({
         variant: "success",
-        description: `Job has been deleted successfully`,
+        description: t("Job has been deleted successfully"),
       });
     } else {
       toast({
         variant: "destructive",
-        title: "Error!",
+        title: t("Error!"),
         description: message,
       });
     }
@@ -146,7 +148,7 @@ function JobsContainer({
     if (!success) {
       toast({
         variant: "destructive",
-        title: "Error!",
+        title: t("Error!"),
         description: message,
       });
       return;
@@ -160,12 +162,12 @@ function JobsContainer({
       router.refresh();
       toast({
         variant: "success",
-        description: `Job has been updated successfully`,
+        description: t("Job has been updated successfully"),
       });
     } else {
       toast({
         variant: "destructive",
-        title: "Error!",
+        title: t("Error!"),
         description: message,
       });
     }
@@ -238,7 +240,7 @@ function JobsContainer({
   };
 
   const onFilterChange = (filterBy: string) => {
-    if (filterBy === "none") {
+    if (filterBy === "all") {
       reloadJobs();
     } else {
       setFilterKey(filterBy);
@@ -267,14 +269,16 @@ function JobsContainer({
       document.body.removeChild(link);
       toast({
         variant: "success",
-        title: "Downloaded successfully!",
+        title: t("Downloaded successfully!"),
       });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error!",
+        title: t("Error!"),
         description:
-          error instanceof Error ? error.message : "Unknown error occurred.",
+          error instanceof Error
+            ? error.message
+            : t("Unknown error occurred."),
       });
     }
   };
@@ -283,11 +287,11 @@ function JobsContainer({
     <>
       <Card x-chunk="dashboard-06-chunk-0">
         <CardHeader className="flex-row justify-between items-center">
-          <CardTitle>My Jobs</CardTitle>
+          <CardTitle>{t("My Jobs")}</CardTitle>
           <div className="flex items-center">
             <div className="ml-auto flex items-center gap-2">
               <Input
-                placeholder="Search jobs..."
+                placeholder={t("Search jobs...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="h-8 w-[180px]"
@@ -295,18 +299,18 @@ function JobsContainer({
               <Select value={filterKey} onValueChange={onFilterChange}>
                 <SelectTrigger className="w-[120px] h-8">
                   <ListFilter className="h-3.5 w-3.5" />
-                  <SelectValue placeholder="Filter" />
+                  <SelectValue placeholder={t("Status")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectLabel>Filter by</SelectLabel>
+                    <SelectLabel>{t("Status")}</SelectLabel>
                     <SelectSeparator />
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="applied">Applied</SelectItem>
-                    <SelectItem value="interview">Interview</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                    <SelectItem value="PT">Part-time</SelectItem>
+                    <SelectItem value="all">{t("All statuses")}</SelectItem>
+                    {statuses.map((status) => (
+                      <SelectItem key={status.id} value={status.value}>
+                        {t(status.label)}
+                      </SelectItem>
+                    ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -319,7 +323,7 @@ function JobsContainer({
               >
                 <File className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  Export
+                  {t("Export")}
                 </span>
               </Button>
               <ImportJobJSON
@@ -357,12 +361,9 @@ function JobsContainer({
                 onSort={handleSort}
               />
               <div className="text-xs text-muted-foreground">
-                Showing{" "}
-                <strong>
-                  {1} to {filteredJobs.length}
-                </strong>{" "}
-                of
-                <strong> {totalJobs}</strong> jobs
+                {t("Showing {start} to {end} of {total} jobs", {
+                  values: { start: 1, end: filteredJobs.length, total: totalJobs },
+                })}
               </div>
             </>
           )}
@@ -371,15 +372,15 @@ function JobsContainer({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => loadJobs(page + 1, filterKey)}
-                disabled={loading}
-                className="btn btn-primary"
-              >
-                {loading ? "Loading..." : "Load More"}
-              </Button>
-            </div>
-          )}
-        </CardContent>
+                  onClick={() => loadJobs(page + 1, filterKey)}
+                  disabled={loading}
+                  className="btn btn-primary"
+                >
+                  {loading ? t("Loading...") : t("Load More")}
+                </Button>
+              </div>
+            )}
+          </CardContent>
         <CardFooter></CardFooter>
       </Card>
     </>

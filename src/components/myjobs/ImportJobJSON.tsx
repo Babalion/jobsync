@@ -24,6 +24,7 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Loader, Upload } from "lucide-react";
 import { toast } from "../ui/use-toast";
+import { useTranslations } from "@/lib/i18n";
 
 type ImportJobJSONProps = {
   jobStatuses: JobStatus[];
@@ -167,6 +168,7 @@ export function ImportJobJSON({
     buildTemplate(jobStatuses, companies, jobTitles, locations, jobSources)
   );
   const [isPending, startTransition] = useTransition();
+  const { t } = useTranslations();
 
   const defaultTemplate = useMemo(
     () => buildTemplate(jobStatuses, companies, jobTitles, locations, jobSources),
@@ -229,7 +231,7 @@ export function ImportJobJSON({
         if (!success) {
           toast({
             variant: "destructive",
-            title: "Error!",
+            title: t("Error!"),
             description: message,
           });
           return;
@@ -237,7 +239,7 @@ export function ImportJobJSON({
 
         toast({
           variant: "success",
-          description: "Job imported successfully",
+          description: t("Job imported successfully"),
         });
         setDialogOpen(false);
         onImported?.();
@@ -245,26 +247,26 @@ export function ImportJobJSON({
         if (error instanceof SyntaxError) {
           toast({
             variant: "destructive",
-            title: "Invalid JSON",
-            description: "Please provide a valid JSON payload.",
+            title: t("Invalid JSON"),
+            description: t("Please provide a valid JSON payload."),
           });
           return;
         }
         if (error instanceof z.ZodError) {
           toast({
             variant: "destructive",
-            title: "Validation failed",
-            description: error.errors[0]?.message ?? "Please check your fields.",
+            title: t("Validation failed"),
+            description: error.errors[0]?.message ?? t("Please check your fields."),
           });
           return;
         }
         toast({
           variant: "destructive",
-          title: "Error!",
+          title: t("Error!"),
           description:
             error instanceof Error
               ? error.message
-              : "Failed to import job from JSON.",
+              : t("Failed to import job from JSON."),
         });
       }
     });
@@ -280,7 +282,7 @@ export function ImportJobJSON({
       >
         <Upload className="h-3.5 w-3.5" />
         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-          Import Job JSON
+          {t("Import Job JSON")}
         </span>
       </Button>
 
@@ -288,7 +290,7 @@ export function ImportJobJSON({
         <DialogOverlay>
           <DialogContent className="lg:max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Import Job JSON</DialogTitle>
+              <DialogTitle>{t("Import Job JSON")}</DialogTitle>
             </DialogHeader>
             <Textarea
               value={jsonValue}
@@ -297,7 +299,7 @@ export function ImportJobJSON({
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>
-                Cancel
+                {t("Cancel")}
               </Button>
               <Button
                 type="button"
@@ -305,7 +307,7 @@ export function ImportJobJSON({
                 disabled={isPending}
                 data-testid="import-job-btn"
               >
-                Import
+                {t("Import")}
                 {isPending && <Loader className="h-4 w-4 shrink-0 spinner" />}
               </Button>
             </DialogFooter>

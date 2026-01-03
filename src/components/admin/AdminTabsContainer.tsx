@@ -5,8 +5,10 @@ import JobTitlesContainer from "@/components/admin/JobTitlesContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+import { useTranslations } from "@/lib/i18n";
 
 function AdminTabsContainer() {
+  const { t } = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
   const queryParams = useSearchParams();
@@ -30,9 +32,9 @@ function AdminTabsContainer() {
       onValueChange={(e) => onTabChange(e)}
     >
       <TabsList>
-        <TabsTrigger value="companies">Companies</TabsTrigger>
-        <TabsTrigger value="job-titles">Job Titles</TabsTrigger>
-        <TabsTrigger value="locations">Locations</TabsTrigger>
+        <TabsTrigger value="companies">{t("Companies")}</TabsTrigger>
+        <TabsTrigger value="job-titles">{t("Job Titles")}</TabsTrigger>
+        <TabsTrigger value="locations">{t("Locations")}</TabsTrigger>
       </TabsList>
       <TabsContent value="companies">
         <CompaniesContainer />

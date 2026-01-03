@@ -27,6 +27,7 @@ import { addCompany, updateCompany } from "@/actions/company.actions";
 import { Company } from "@/models/job.model";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
+import { useTranslations } from "@/lib/i18n";
 
 type AddCompanyProps = {
   reloadCompanies: () => void;
@@ -44,8 +45,9 @@ function AddCompany({
   setDialogOpen,
 }: AddCompanyProps) {
   const [isPending, startTransition] = useTransition();
+  const { t } = useTranslations();
 
-  const pageTitle = editCompany ? "Edit Company" : "Add Company";
+  const pageTitle = editCompany ? t("Edit Company") : t("Add Company");
 
   const form = useForm<z.infer<typeof AddCompanyFormSchema>>({
     resolver: zodResolver(AddCompanyFormSchema),
@@ -137,7 +139,7 @@ function AddCompany({
       if (!res?.success) {
         toast({
           variant: "destructive",
-          title: "Error!",
+          title: t("Error!"),
           description: res?.message,
         });
       } else {
@@ -146,9 +148,9 @@ function AddCompany({
         reloadCompanies();
         toast({
           variant: "success",
-          description: `Company has been ${
-            editCompany ? "updated" : "created"
-          } successfully`,
+          description: editCompany
+            ? t("Company has been updated successfully")
+            : t("Company has been created successfully"),
         });
       }
     });
@@ -165,14 +167,14 @@ function AddCompany({
       >
         <PlusCircle className="h-3.5 w-3.5" />
         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-          Add Company
+          {t("Add Company")}
         </span>
       </Button>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="lg:max-h-screen overflow-y-scroll lg:max-w-4xl w-full">
-          <DialogHeader>
-            <DialogTitle>{pageTitle}</DialogTitle>
-          </DialogHeader>
+          <DialogContent className="lg:max-h-screen overflow-y-scroll lg:max-w-4xl w-full">
+            <DialogHeader>
+              <DialogTitle>{pageTitle}</DialogTitle>
+            </DialogHeader>
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -180,7 +182,7 @@ function AddCompany({
             >
               <div className="md:col-span-2 flex gap-4 items-start">
                 <img
-                  alt="Logo preview"
+                  alt={t("Logo preview")}
                   src={previewLogo || "/images/jobsync-logo.svg"}
                   width={64}
                   height={64}
@@ -197,7 +199,7 @@ function AddCompany({
                       name="company"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company Name</FormLabel>
+                          <FormLabel>{t("Company Name")}</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -214,7 +216,7 @@ function AddCompany({
                       name="companyUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company Website</FormLabel>
+                          <FormLabel>{t("Company Website")}</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -237,11 +239,11 @@ function AddCompany({
                   name="archetype"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Archetype</FormLabel>
+                      <FormLabel>{t("Archetype")}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select archetype" />
+                            <SelectValue placeholder={t("Select archetype")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -261,11 +263,11 @@ function AddCompany({
                   name="ownership"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ownership</FormLabel>
+                      <FormLabel>{t("Ownership")}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select ownership" />
+                            <SelectValue placeholder={t("Select ownership")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -285,9 +287,12 @@ function AddCompany({
                   name="industryRole"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Industry & Role</FormLabel>
+                      <FormLabel>{t("Industry & Role")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Branche + Wertschöpfungsrolle" {...field} />
+                        <Input
+                          placeholder={t("Industry & Role")}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -298,11 +303,11 @@ function AddCompany({
                   name="innovationLevel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Innovation Level</FormLabel>
+                      <FormLabel>{t("Innovation Level")}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select innovation level" />
+                            <SelectValue placeholder={t("Select innovation level")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -322,11 +327,11 @@ function AddCompany({
                   name="cultureTag"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Culture Tag</FormLabel>
+                      <FormLabel>{t("Culture Tag")}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select culture" />
+                            <SelectValue placeholder={t("Select culture")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -346,9 +351,9 @@ function AddCompany({
                   name="country"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Country</FormLabel>
+                      <FormLabel>{t("Country")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Country" {...field} />
+                        <Input placeholder={t("Country")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -362,9 +367,9 @@ function AddCompany({
                   name="summary"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>TLDR Summary</FormLabel>
+                      <FormLabel>{t("TLDR Summary")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Kurzbeschreibung in 2 Sätzen" {...field} />
+                        <Input placeholder={t("TLDR Summary")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -375,9 +380,9 @@ function AddCompany({
                   name="fitNotes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Fit Notes</FormLabel>
+                      <FormLabel>{t("Fit Notes")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Notizen / Red Flags" {...field} />
+                        <Input placeholder={t("Fit Notes")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -392,7 +397,7 @@ function AddCompany({
                   render={({ field }) => (
                     <FormItem className="flex items-center justify-between rounded-lg border p-3">
                       <div>
-                        <FormLabel className="mb-0">Betriebsrat</FormLabel>
+                        <FormLabel className="mb-0">{t("Works Council")}</FormLabel>
                       </div>
                       <FormControl>
                         <Switch
@@ -409,7 +414,7 @@ function AddCompany({
                   render={({ field }) => (
                     <FormItem className="flex items-center justify-between rounded-lg border p-3">
                       <div>
-                        <FormLabel className="mb-0">Tarifvertrag</FormLabel>
+                        <FormLabel className="mb-0">{t("Collective Agreement")}</FormLabel>
                       </div>
                       <FormControl>
                         <Switch
@@ -432,11 +437,11 @@ function AddCompany({
                       className="mt-2 md:mt-0 w-full"
                       onClick={closeDialog}
                     >
-                      Cancel
+                      {t("Cancel")}
                     </Button>
                   </div>
                   <Button type="submit" disabled={!formState.isDirty}>
-                    Save
+                    {t("Save")}
                     {isPending && (
                       <Loader className="h-4 w-4 shrink-0 spinner" />
                     )}

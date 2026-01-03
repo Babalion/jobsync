@@ -24,6 +24,7 @@ import { AlertDialog } from "@/models/alertDialog.model";
 import { toast } from "../ui/use-toast";
 import { deleteJobLocationById } from "@/actions/jobLocation.actions";
 import { Badge } from "../ui/badge";
+import { useTranslations } from "@/lib/i18n";
 
 type JobLocationsTableProps = {
   jobLocations: JobLocation[];
@@ -43,6 +44,7 @@ function JobLocationsTable({
   onSort,
   onEditLocation,
 }: JobLocationsTableProps) {
+  const { t } = useTranslations();
   const [alert, setAlert] = useState<AlertDialog>({
     openState: false,
     deleteAction: false,
@@ -51,9 +53,10 @@ function JobLocationsTable({
     if (location._count?.jobsApplied! > 0) {
       setAlert({
         openState: true,
-        title: "Applied jobs exist!",
-        description:
-          "Associated jobs applied must be 0 to be able to delete this job location",
+        title: t("Applied jobs exist!"),
+        description: t(
+          "Associated jobs applied must be 0 to be able to delete this job location"
+        ),
         deleteAction: false,
       });
     } else {
@@ -70,13 +73,13 @@ function JobLocationsTable({
       if (success) {
         toast({
           variant: "success",
-          description: `Job location has been deleted successfully`,
+          description: t("Job location has been deleted successfully"),
         });
         reloadJobLocations();
       } else {
         toast({
           variant: "destructive",
-          title: "Error!",
+          title: t("Error!"),
           description: message,
         });
       }
@@ -109,21 +112,23 @@ function JobLocationsTable({
         <TableHeader>
           <TableRow>
             <TableHead>
-              <SortButton label="City" sortKey="label" />
+              <SortButton label={t("City")} sortKey="label" />
             </TableHead>
             <TableHead>
-              <SortButton label="Zip" sortKey="zipCode" />
+              <SortButton label={t("Zip")} sortKey="zipCode" />
             </TableHead>
             <TableHead>
-              <SortButton label="Country" sortKey="country" />
+              <SortButton label={t("Country")} sortKey="country" />
             </TableHead>
             <TableHead>
-              <SortButton label="Jobs" sortKey="jobsApplied" />
+              <SortButton label={t("Jobs")} sortKey="jobsApplied" />
             </TableHead>
-            <TableHead className="hidden md:table-cell">Lat / Lng</TableHead>
+            <TableHead className="hidden md:table-cell">
+              {t("Lat / Lng")}
+            </TableHead>
             <TableHead></TableHead>
             <TableHead>
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{t("Actions")}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -153,23 +158,23 @@ function JobLocationsTable({
                     <DropdownMenuTrigger asChild>
                       <Button aria-haspopup="true" size="icon" variant="ghost">
                         <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
+                        <span className="sr-only">{t("Toggle menu")}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                       <DropdownMenuItem
                         className="cursor-pointer"
                         onClick={() => onEditLocation?.(location)}
                       >
-                        Edit Location
+                        {t("Edit Location")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600 cursor-pointer"
                         onClick={() => onDeleteJobLocation(location)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
-                        Delete
+                        {t("Delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

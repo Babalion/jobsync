@@ -7,8 +7,10 @@ import JobTitlesTable from "./JobTitlesTable";
 import { getJobTitleList } from "@/actions/jobtitle.actions";
 import Loading from "../Loading";
 import { Button } from "../ui/button";
+import { useTranslations } from "@/lib/i18n";
 
 function JobTitlesContainer() {
+  const { t } = useTranslations();
   const [titles, setTitles] = useState<JobTitle[]>([]);
   const [totalJobTitles, setTotalJobTitles] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
@@ -47,7 +49,7 @@ function JobTitlesContainer() {
       <div className="col-span-3">
         <Card x-chunk="dashboard-06-chunk-0">
           <CardHeader className="flex-row justify-between items-center">
-            <CardTitle>Job Titles</CardTitle>
+            <CardTitle>{t("Job Titles")}</CardTitle>
             <div className="flex items-center">
               <div className="ml-auto flex items-center gap-2">
                 {/* <AddCompany reloadCompanies={reloadJobTitles} /> */}
@@ -63,12 +65,9 @@ function JobTitlesContainer() {
                   reloadJobTitles={reloadJobTitles}
                 />
                 <div className="text-xs text-muted-foreground">
-                  Showing{" "}
-                  <strong>
-                    {1} to {titles.length}
-                  </strong>{" "}
-                  of
-                  <strong> {totalJobTitles}</strong> job titles
+                  {t("Showing {start} to {end} of {total} job titles", {
+                    values: { start: 1, end: titles.length, total: totalJobTitles },
+                  })}
                 </div>
               </>
             )}
@@ -81,7 +80,7 @@ function JobTitlesContainer() {
                   disabled={loading}
                   className="btn btn-primary"
                 >
-                  {loading ? "Loading..." : "Load More"}
+                  {loading ? t("Loading...") : t("Load More")}
                 </Button>
               </div>
             )}
