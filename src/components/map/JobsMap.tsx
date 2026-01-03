@@ -2,7 +2,8 @@
 
 import { JobResponse, JobStatus } from "@/models/job.model";
 import { getCoordsForLocation } from "@/lib/data/countryCoords";
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import { useTheme } from "next-themes";
 import { Badge } from "../ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Input } from "../ui/input";
@@ -41,8 +42,10 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(5); // integer tile zoom for better accuracy
+  const wheelDeltaRef = useRef(0);
   const [center, setCenter] = useState({ lat: 51, lng: 10 }); // Germany-ish
   const [dragging, setDragging] = useState(false);
+  const { resolvedTheme } = useTheme();
   const dragStart = useRef<{
     x: number;
     y: number;
@@ -51,6 +54,16 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 800, height: 450 });
   const userInteracted = useRef(false);
+
+  const clampZoom = (z: number) => Math.min(Math.max(z, 2), 12);
+  const clampLatLng = (lat: number, lng: number) => {
+    const clampedLat = Math.min(Math.max(lat, -85), 85);
+    let wrappedLng = lng;
+    if (wrappedLng > 180 || wrappedLng < -180) {
+      wrappedLng = ((wrappedLng + 180) % 360) - 180;
+    }
+    return { lat: clampedLat, lng: wrappedLng };
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -64,29 +77,43 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const handler = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("wheel", handler, { passive: false });
+    return () => window.removeEventListener("wheel", handler);
+  }, []);
+
   const TILE_SIZE = 256;
-  const project = (lat: number, lng: number) => {
-    const sinLat = Math.sin((lat * Math.PI) / 180);
-    const z = Math.pow(2, zoom);
-    const x = ((lng + 180) / 360) * TILE_SIZE * z;
+  const project = (lat: number, lng: number, z: number) => {
+    const scale = Math.pow(2, z);
+    const x = ((lng + 180) / 360) * TILE_SIZE * scale;
+    const latRad = (lat * Math.PI) / 180;
     const y =
-      ((1 - Math.log((1 + sinLat) / (1 - sinLat)) / Math.PI) / 2) *
+      (1 -
+        Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) /
+      2 *
       TILE_SIZE *
-      z;
+      scale;
     return { x, y };
   };
 
-  const unproject = (x: number, y: number) => {
-    const z = Math.pow(2, zoom);
-    const lng = (x / (TILE_SIZE * z)) * 360 - 180;
-    const n = Math.PI - (2 * Math.PI * y) / (TILE_SIZE * z);
+  const unproject = (x: number, y: number, z: number) => {
+    const scale = Math.pow(2, z);
+    const lng = (x / (TILE_SIZE * scale)) * 360 - 180;
+    const n = Math.PI - (2 * Math.PI * y) / (TILE_SIZE * scale);
     const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
     return { lat, lng };
   };
 
-  const centerPx = project(center.lat, center.lng);
-  const halfW = size.width / 2;
-  const halfH = size.height / 2;
+  const worldSize = TILE_SIZE * Math.pow(2, zoom);
+  const halfW = Math.min(size.width / 2, worldSize / 2 - 1);
+  const halfH = Math.min(size.height / 2, worldSize / 2 - 1);
+  const clampedCenter = clampLatLng(center.lat, center.lng);
+  const centerPx = project(clampedCenter.lat, clampedCenter.lng, zoom);
   const viewport = {
     minX: centerPx.x - halfW,
     maxX: centerPx.x + halfW,
@@ -94,10 +121,13 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
     maxY: centerPx.y + halfH,
   };
 
+  const tileUrlTemplate =
+    resolvedTheme === "dark"
+      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+      : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_no_buildings/{z}/{x}/{y}.png";
+
   const markers = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
-    const mapWidth = viewport.maxX - viewport.minX;
-    const mapHeight = viewport.maxY - viewport.minY;
     return (jobs || [])
       .filter((job) => {
         const matchesStatus =
@@ -112,40 +142,50 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
         return matchesStatus && matchesSearch;
       })
       .map((job) => {
-        const coords =
-          (job.Location?.lat && job.Location?.lng
-            ? { lat: job.Location.lat, lng: job.Location.lng }
-            : getCoordsForLocation(
-                job.Location?.label,
-                job.Location?.country,
-                job.Location?.zipCode
-              )) || { lat: 0, lng: 0 };
-        const px = project(coords.lat, coords.lng);
-        const xRaw = px.x - viewport.minX;
-        const yRaw = px.y - viewport.minY;
-        const x = ((xRaw % mapWidth) + mapWidth) % mapWidth;
-        const y = Math.min(Math.max(yRaw, 0), mapHeight);
-        return { job, x, y, coords };
+        const latNum =
+          job.Location?.lat === null || job.Location?.lat === undefined
+            ? undefined
+            : Number(job.Location.lat);
+        const lngNum =
+          job.Location?.lng === null || job.Location?.lng === undefined
+            ? undefined
+            : Number(job.Location.lng);
+        const hasLatLng = Number.isFinite(latNum) && Number.isFinite(lngNum);
+        const coords = hasLatLng
+          ? { lat: latNum as number, lng: lngNum as number }
+          : getCoordsForLocation(
+              job.Location?.label,
+              job.Location?.country,
+              job.Location?.zipCode
+            ) || { lat: 0, lng: 0 };
+        const coordsClamped = clampLatLng(coords.lat, coords.lng);
+        const px = project(coordsClamped.lat, coordsClamped.lng, zoom);
+        let dx = px.x - centerPx.x;
+        if (dx > worldSize / 2) dx -= worldSize;
+        if (dx < -worldSize / 2) dx += worldSize;
+        const dy = px.y - centerPx.y;
+        const x = halfW + dx;
+        const y = halfH + dy;
+        return { job, x, y, coords: coordsClamped };
       });
-  }, [jobs, project, searchTerm, statusFilter, viewport.maxX, viewport.minX, viewport.minY, viewport.maxY]);
+  }, [
+    jobs,
+    searchTerm,
+    statusFilter,
+    zoom,
+    centerPx.x,
+    centerPx.y,
+    worldSize,
+    halfW,
+    halfH,
+  ]);
 
-  const clampZoom = (z: number) => Math.min(Math.max(z, 2), 12);
-  const clampLatLng = (lat: number, lng: number) => {
-    const clampedLat = Math.min(Math.max(lat, -85), 85);
-    let wrappedLng = lng;
-    if (wrappedLng > 180 || wrappedLng < -180) {
-      wrappedLng = ((wrappedLng + 180) % 360) - 180;
-    }
-    return { lat: clampedLat, lng: wrappedLng };
-  };
-
-  const fitToMarkers = useMemo(
-    () => () => {
-      if (!markers.length) return;
-      const lats = markers.map((m) => m.coords.lat);
-      const lngs = markers.map((m) => m.coords.lng);
-      const minLat = Math.min(...lats);
-      const maxLat = Math.max(...lats);
+  const fitToMarkers = useCallback(() => {
+    if (!markers.length) return;
+    const lats = markers.map((m) => m.coords.lat);
+    const lngs = markers.map((m) => m.coords.lng);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
     const minLng = Math.min(...lngs);
     const maxLng = Math.max(...lngs);
     const midLat = (minLat + maxLat) / 2;
@@ -184,9 +224,7 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
     setCenter(clampLatLng(nextCenter.lat, nextCenter.lng));
     setZoom(nextZoom);
     userInteracted.current = true; // avoid refitting loop
-    },
-    [markers, size.height, size.width, clampZoom, center.lat, center.lng, zoom]
-  );
+  }, [markers, size.height, size.width, center.lat, center.lng, zoom]);
 
   useEffect(() => {
     userInteracted.current = false;
@@ -206,10 +244,19 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
   const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     userInteracted.current = true;
-    const delta = e.deltaY > 0 ? -1 : 1;
-    const nextZoom = clampZoom(zoom + delta);
-    if (nextZoom === zoom) return;
-    setZoom(nextZoom);
+    // Accumulate wheel movement so zoom steps feel slower/smoother.
+    const threshold = 220; // pixels of wheel delta before a zoom step
+    wheelDeltaRef.current += e.deltaY;
+    if (Math.abs(wheelDeltaRef.current) < threshold) {
+      return;
+    }
+    const steps = Math.trunc(Math.abs(wheelDeltaRef.current) / threshold);
+    const direction = wheelDeltaRef.current > 0 ? -1 : 1;
+    wheelDeltaRef.current = wheelDeltaRef.current % threshold;
+    const nextZoom = clampZoom(zoom + direction * steps);
+    if (nextZoom !== zoom) {
+      setZoom(nextZoom);
+    }
   };
 
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -231,7 +278,14 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
         x: dragStart.current.centerPx.x + dx,
         y: dragStart.current.centerPx.y + dy,
       };
-      const nextCenter = unproject(newCenterPx.x, newCenterPx.y);
+      const worldSize = TILE_SIZE * Math.pow(2, zoom);
+      const halfW = Math.min(size.width / 2, worldSize / 2 - 1);
+      const halfH = Math.min(size.height / 2, worldSize / 2 - 1);
+      const clampedPx = {
+        x: Math.min(Math.max(newCenterPx.x, halfW), worldSize - halfW),
+        y: Math.min(Math.max(newCenterPx.y, halfH), worldSize - halfH),
+      };
+      const nextCenter = unproject(clampedPx.x, clampedPx.y, zoom);
       setCenter(clampLatLng(nextCenter.lat, nextCenter.lng));
     }
   };
@@ -311,7 +365,13 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
             </div>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.06),transparent_35%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.04),transparent_40%),radial-gradient(circle_at_50%_80%,rgba(255,255,255,0.05),transparent_35%)]" />
             {/* Tile layer */}
-            <TileLayer viewport={viewport} zoom={zoom} tileSize={TILE_SIZE} />
+            <TileLayer
+              viewport={viewport}
+              zoom={zoom}
+              tileSize={TILE_SIZE}
+              tileUrlTemplate={tileUrlTemplate}
+              subdomains={["a", "b", "c", "d"]}
+            />
             {/* Markers */}
             {markers.map(({ job, x, y }) => (
               <div
@@ -372,42 +432,6 @@ export default function JobsMap({ jobs, statuses }: JobsMapProps) {
                 >
                   Close
                 </button>
-              </div>
-              <div className="text-lg font-semibold">
-                {selectedMarker.job.JobTitle?.label}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {selectedMarker.job.Company?.label}
-              </div>
-              <div className="text-sm text-muted-foreground mb-2">
-                {selectedMarker.job.Location?.zipCode
-                  ? `${selectedMarker.job.Location.zipCode}, `
-                  : ""}
-                {selectedMarker.job.Location?.label}
-                {selectedMarker.job.Location?.country
-                  ? `, ${selectedMarker.job.Location.country}`
-                  : ""}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Added:{" "}
-                {selectedMarker.job.createdAt
-                  ? format(selectedMarker.job.createdAt, "PP")
-                  : "Unknown"}
-                {selectedMarker.job.appliedDate
-                  ? ` • Applied: ${format(selectedMarker.job.appliedDate, "PP")}`
-                  : ""}
-              </div>
-            </div>
-          )}
-          {selectedMarker && (
-            <div className="rounded-xl border bg-background p-4 max-h-[78vh] overflow-auto">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge className={statusColor(selectedMarker.job.Status?.value)}>
-                  {selectedMarker.job.Status?.label}
-                </Badge>
-                <span className="text-sm text-muted-foreground">
-                  {selectedMarker.job.JobSource?.label}
-                </span>
               </div>
               <div className="text-lg font-semibold">
                 {selectedMarker.job.JobTitle?.label}

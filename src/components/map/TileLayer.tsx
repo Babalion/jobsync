@@ -4,9 +4,17 @@ type Props = {
   viewport: { minX: number; maxX: number; minY: number; maxY: number };
   zoom: number;
   tileSize: number;
+  tileUrlTemplate?: string;
+  subdomains?: string[];
 };
 
-export default function TileLayer({ viewport, zoom, tileSize }: Props) {
+export default function TileLayer({
+  viewport,
+  zoom,
+  tileSize,
+  tileUrlTemplate = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  subdomains = ["a", "b", "c", "d"],
+}: Props) {
   const tiles = useMemo(() => {
     const minTileX = Math.floor(viewport.minX / tileSize);
     const maxTileX = Math.floor(viewport.maxX / tileSize);
@@ -22,7 +30,12 @@ export default function TileLayer({ viewport, zoom, tileSize }: Props) {
         if (y < 0 || y >= tilesPerAxis) continue;
         // wrap x horizontally
         const wrappedX = ((x % tilesPerAxis) + tilesPerAxis) % tilesPerAxis;
-        const url = `https://tile.openstreetmap.org/${zoom}/${wrappedX}/${y}.png`;
+        const sub = subdomains[(Math.abs(wrappedX + y) % subdomains.length)] || "";
+        const url = tileUrlTemplate
+          .replace("{z}", String(zoom))
+          .replace("{x}", String(wrappedX))
+          .replace("{y}", String(y))
+          .replace("{s}", sub);
         result.push({
           x,
           y,
@@ -33,7 +46,16 @@ export default function TileLayer({ viewport, zoom, tileSize }: Props) {
       }
     }
     return result;
-  }, [tileSize, viewport.maxX, viewport.maxY, viewport.minX, viewport.minY, zoom]);
+  }, [
+    subdomains,
+    tileSize,
+    tileUrlTemplate,
+    viewport.maxX,
+    viewport.maxY,
+    viewport.minX,
+    viewport.minY,
+    zoom,
+  ]);
 
   return (
     <>
@@ -49,7 +71,6 @@ export default function TileLayer({ viewport, zoom, tileSize }: Props) {
             top: tile.top,
             width: tileSize,
             height: tileSize,
-            filter: "brightness(0.9)",
           }}
           draggable={false}
           loading="lazy"
