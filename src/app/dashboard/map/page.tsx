@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { getStatusList } from "@/actions/job.actions";
-import { getJobsForMap } from "@/actions/map.actions";
+import { getCompaniesForMap, getJobsForMap } from "@/actions/map.actions";
 import JobsMap from "@/components/map/JobsMap";
 
 export const metadata: Metadata = {
@@ -8,14 +8,19 @@ export const metadata: Metadata = {
 };
 
 async function MapPage() {
-  const [statusList, mapJobs] = await Promise.all([
+  const [statusList, mapJobs, mapCompanies] = await Promise.all([
     getStatusList(),
     getJobsForMap(),
+    getCompaniesForMap(),
   ]);
 
   return (
     <div className="col-span-3">
-      <JobsMap jobs={mapJobs?.data || []} statuses={statusList || []} />
+      <JobsMap
+        jobs={mapJobs?.data || []}
+        statuses={statusList || []}
+        companies={mapCompanies?.data || []}
+      />
     </div>
   );
 }

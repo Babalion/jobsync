@@ -1,5 +1,5 @@
 "use client";
-import { useTransition, useState, useEffect } from "react";
+import { useTransition, useState, useEffect, useMemo } from "react";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -25,6 +25,7 @@ import { toast } from "../ui/use-toast";
 import { createJobLocation, updateJobLocation } from "@/actions/jobLocation.actions";
 import { JobLocation } from "@/models/job.model";
 import { useTranslations } from "@/lib/i18n";
+import { geocodeWithAddress } from "@/lib/geocode";
 
 const AddLocationSchema = z.object({
   id: z.string().optional(),
@@ -41,6 +42,7 @@ type AddLocationProps = {
   compact?: boolean;
   onCreated?: (loc: JobLocation) => void;
   renderTrigger?: boolean;
+  locationSuggestions?: JobLocation[];
 };
 
 function AddLocation({
@@ -50,9 +52,11 @@ function AddLocation({
   compact,
   onCreated,
   renderTrigger = true,
+  locationSuggestions = [],
 }: AddLocationProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [findingZip, setFindingZip] = useState(false);
   const { t } = useTranslations();
 
   const form = useForm<z.infer<typeof AddLocationSchema>>({
@@ -65,6 +69,17 @@ function AddLocation({
       country: "",
     },
   });
+
+  const cityValue = form.watch("city");
+  const countryValue = form.watch("country");
+
+  const matchingSuggestions = useMemo(() => {
+    const term = cityValue.trim().toLowerCase();
+    if (!term) return [];
+    return (locationSuggestions || []).filter((loc) =>
+      loc.label.toLowerCase().includes(term)
+    );
+  }, [cityValue, locationSuggestions]);
 
   useEffect(() => {
     if (editLocation) {
@@ -168,10 +183,67 @@ function AddLocation({
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
+                    {matchingSuggestions.length > 0 && (
+                      <div className="flex flex-wrap gap-2 text-xs mt-2">
+                        {matchingSuggestions.slice(0, 5).map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            className="rounded-full border px-2 py-1 hover:bg-accent"
+                            onClick={() => {
+                              form.setValue("zipCode", s.zipCode || "");
+                              if (s.country) {
+                                form.setValue("country", s.country);
+                              }
+                            }}
+                          >
+                            {s.zipCode || t("Zip / Postal Code")}
+                            {s.country ? ` • ${s.country}` : ""}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full md:w-auto"
+                  onClick={async () => {
+                    if (!cityValue) return;
+                    setFindingZip(true);
+                    const res = await geocodeWithAddress({
+                      city: cityValue,
+                      zipCode: form.getValues("zipCode"),
+                      country: countryValue,
+                    });
+                    setFindingZip(false);
+                    if (res?.zip) {
+                      form.setValue("zipCode", res.zip);
+                    }
+                    if (res?.countryCode && !countryValue) {
+                      const code = res.countryCode.toLowerCase();
+                      const normalizedCountry =
+                        code === "de" ? "deutschland" : code;
+                      form.setValue("country", normalizedCountry);
+                    }
+                    if (!res?.zip) {
+                      toast({
+                        variant: "destructive",
+                        title: t("Error!"),
+                        description: t("Could not find a ZIP code. Please enter manually."),
+                      });
+                    }
+                  }}
+                  disabled={!cityValue || findingZip}
+                >
+                  {findingZip ? t("Loading...") : t("Suggest ZIP")}
+                </Button>
+              </div>
               <FormField
                 control={form.control}
                 name="country"

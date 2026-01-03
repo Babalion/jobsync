@@ -3,11 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AddCompany from "./AddCompany";
 import CompaniesTable from "./CompaniesTable";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Company } from "@/models/job.model";
+import { Company, JobLocation } from "@/models/job.model";
 import { getCompanyById, getCompanyList } from "@/actions/company.actions";
-import { APP_CONSTANTS } from "@/lib/constants";
+import { getAllJobLocations } from "@/actions/jobLocation.actions";
 import Loading from "../Loading";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useTranslations } from "@/lib/i18n";
@@ -15,44 +14,39 @@ import { useTranslations } from "@/lib/i18n";
 function CompaniesContainer() {
   const { t } = useTranslations();
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [totalCompanies, setTotalCompanies] = useState<number>(0);
-  const [page, setPage] = useState<number>(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editCompany, setEditCompany] = useState(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [ownershipFilter, setOwnershipFilter] = useState("all");
   const [archetypeFilter, setArchetypeFilter] = useState("all");
+  const [locationOptions, setLocationOptions] = useState<JobLocation[]>([]);
   const [sortConfig, setSortConfig] = useState<{
     key: "label" | "country" | "jobsApplied" | "archetype" | "ownership" | "industryRole";
     direction: "asc" | "desc";
   }>({ key: "label", direction: "asc" });
 
-  const recordsPerPage = APP_CONSTANTS.RECORDS_PER_PAGE;
-
   const loadCompanies = useCallback(
-    async (page: number) => {
+    async () => {
       setLoading(true);
       try {
         const { data, total } = await getCompanyList(
-          page,
-          recordsPerPage,
+          1,
+          null,
           "applied"
         );
         if (data) {
-          setCompanies((prev) => (page === 1 ? data : [...prev, ...data]));
-          setTotalCompanies(total);
-          setPage(page);
+          setCompanies(data);
         }
       } finally {
         setLoading(false);
       }
     },
-    [recordsPerPage]
+    []
   );
 
   const reloadCompanies = useCallback(async () => {
-    await loadCompanies(1);
+    await loadCompanies();
   }, [loadCompanies]);
 
   const resetEditCompany = () => {
@@ -60,8 +54,17 @@ function CompaniesContainer() {
   };
 
   useEffect(() => {
-    (async () => await loadCompanies(1))();
+    (async () => await loadCompanies())();
   }, [loadCompanies]);
+
+  useEffect(() => {
+    (async () => {
+      const list = await getAllJobLocations();
+      if (list) {
+        setLocationOptions(list);
+      }
+    })();
+  }, []);
 
   const filteredCompanies = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
@@ -138,6 +141,10 @@ function CompaniesContainer() {
                   resetEditCompany={resetEditCompany}
                   dialogOpen={dialogOpen}
                   setDialogOpen={setDialogOpen}
+                  locations={locationOptions}
+                  onLocationCreated={(loc) => {
+                    setLocationOptions((prev) => [loc as JobLocation, ...prev]);
+                  }}
                 />
               </div>
             </div>
@@ -181,43 +188,17 @@ function CompaniesContainer() {
               </div>
             </div>
             {loading && <Loading />}
-            {companies.length > 0 && (
-              <>
-                {filteredCompanies.length > 0 ? (
-                  <CompaniesTable
-                    companies={filteredCompanies}
-                    reloadCompanies={reloadCompanies}
-                    editCompany={onEditCompany}
-                    sortConfig={sortConfig}
-                    onSort={handleSort}
-                  />
-                ) : (
-                  <div className="text-sm text-muted-foreground">
-                    {t("No companies match your filters.")}
-                  </div>
-                )}
-                <div className="text-xs text-muted-foreground">
-                  {t("Showing {start} to {end} of {total} companies", {
-                    values: {
-                      start: 1,
-                      end: filteredCompanies.length,
-                      total: totalCompanies,
-                    },
-                  })}
-                </div>
-              </>
-            )}
-            {companies.length < totalCompanies && (
-              <div className="flex justify-center p-4">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => loadCompanies(page + 1)}
-                  disabled={loading}
-                  className="btn btn-primary"
-                >
-                  {loading ? t("Loading...") : t("Load More")}
-                </Button>
+            {companies.length > 0 ? (
+              <CompaniesTable
+                companies={filteredCompanies}
+                reloadCompanies={reloadCompanies}
+                editCompany={onEditCompany}
+                sortConfig={sortConfig}
+                onSort={handleSort}
+              />
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                {t("No companies match your filters.")}
               </div>
             )}
           </CardContent>

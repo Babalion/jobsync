@@ -25,7 +25,7 @@ export const getAllJobTitles = async (): Promise<any | undefined> => {
 
 export const getJobTitleList = async (
   page = 1,
-  limit = 10,
+  limit?: number | null,
   countBy?: string
 ): Promise<any | undefined> => {
   try {
@@ -35,15 +35,15 @@ export const getJobTitleList = async (
       throw new Error("Not authenticated");
     }
     const dbUser = await ensureUserExists(user);
-    const skip = (page - 1) * limit;
+    const skip = limit ? (page - 1) * limit : undefined;
 
     const [data, total] = await Promise.all([
       prisma.jobTitle.findMany({
         where: {
           createdBy: dbUser.id,
         },
-        skip,
-        take: limit,
+        ...(skip != null ? { skip } : {}),
+        ...(limit != null ? { take: limit } : {}),
         ...(countBy
           ? {
               select: {

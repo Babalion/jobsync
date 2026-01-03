@@ -49,6 +49,7 @@ export interface Company {
   value: string;
   createdBy: string;
   website?: string;
+  careerSite?: string;
   archetype?: string;
   ownership?: string;
   industryRole?: string;
@@ -60,6 +61,7 @@ export interface Company {
   hasWorksCouncil?: boolean;
   hasCollectiveAgreement?: boolean;
   logoUrl?: string;
+  locations?: JobLocation[];
   _count?: {
     jobsApplied: number;
   };

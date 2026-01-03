@@ -64,6 +64,7 @@ model Location {
   stateProv      String?
   country        String?
   jobsApplied    Job[]
+  companies      CompanyLocation[]
   createdBy      String // userId
   user           User             @relation(fields: [createdBy], references: [id])
 
@@ -77,6 +78,7 @@ model Company {
   jobsApplied     Job[]
   logoUrl         String? // field is optional
   website         String?
+  careerSite      String?
   archetype       String?
   ownership       String?
   industryRole    String?
@@ -87,10 +89,20 @@ model Company {
   fitNotes        String?
   hasWorksCouncil Boolean          @default(false)
   hasCollectiveAgreement Boolean   @default(false)
+  locations       CompanyLocation[]
   createdBy       String // userId
   user            User             @relation(fields: [createdBy], references: [id])
 
   @@unique([value, createdBy])
+}
+
+model CompanyLocation {
+  companyId  String
+  locationId String
+  company    Company  @relation(fields: [companyId], references: [id])
+  location   Location @relation(fields: [locationId], references: [id])
+
+  @@id([companyId, locationId])
 }
 
 model JobSource {

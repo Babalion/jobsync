@@ -31,7 +31,7 @@ export const getJobSourceList = async (): Promise<any | undefined> => {
 
 export const getJobsList = async (
   page = 1,
-  limit = 10,
+  limit?: number | null,
   filter?: string
 ): Promise<any | undefined> => {
   try {
@@ -41,7 +41,7 @@ export const getJobsList = async (
       throw new Error("Not authenticated");
     }
     const dbUser = await ensureUserExists(user);
-    const skip = (page - 1) * limit;
+    const skip = limit ? (page - 1) * limit : undefined;
 
     const filterBy = filter
       ? filter === Object.keys(JOB_TYPES)[1]
@@ -60,8 +60,8 @@ export const getJobsList = async (
           userId: dbUser.id,
           ...filterBy,
         },
-        skip,
-        take: limit,
+        ...(skip != null ? { skip } : {}),
+        ...(limit != null ? { take: limit } : {}),
         select: {
           id: true,
           createdAt: true,
@@ -200,14 +200,12 @@ export const createLocation = async (
       throw new Error("Please provide location name");
     }
 
-  const { lat, lng } = await geocodeLocation({
-    city: label,
-    zipCode: zipCode || undefined,
-    country,
-  });
-  if (lat == null || lng == null) {
-    throw new Error("Unable to geocode location. Please check city/zip/country.");
-  }
+  const { lat, lng } =
+    (await geocodeLocation({
+      city: label,
+      zipCode: zipCode || undefined,
+      country,
+    })) || {};
 
   const existing = await prisma.location.findFirst({
     where: {
@@ -225,8 +223,8 @@ export const createLocation = async (
         value: uniqueValue || value,
         zipCode: finalZip || null,
         country: finalCountry || null,
-        lat,
-        lng,
+        lat: lat ?? null,
+        lng: lng ?? null,
         createdBy: dbUser.id,
       },
     });

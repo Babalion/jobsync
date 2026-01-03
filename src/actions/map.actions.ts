@@ -35,3 +35,30 @@ export const getJobsForMap = async (): Promise<any | undefined> => {
     return handleError(error, msg);
   }
 };
+
+export const getCompaniesForMap = async (): Promise<any | undefined> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+    const dbUser = await ensureUserExists(user);
+
+    const companies = await prisma.company.findMany({
+      where: {
+        createdBy: dbUser.id,
+      },
+      include: {
+        locations: {
+          include: { location: true },
+        },
+      },
+      orderBy: { label: "asc" },
+    });
+
+    return { success: true, data: companies };
+  } catch (error) {
+    const msg = "Failed to fetch companies for map. ";
+    return handleError(error, msg);
+  }
+};

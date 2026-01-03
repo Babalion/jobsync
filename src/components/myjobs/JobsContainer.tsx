@@ -74,7 +74,6 @@ function JobsContainer({
   );
   const [jobs, setJobs] = useState<JobResponse[]>([]);
   const [page, setPage] = useState(1);
-  const [totalJobs, setTotalJobs] = useState(0);
   const [filterKey, setFilterKey] = useState<string>("all");
   const [editJob, setEditJob] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -91,19 +90,16 @@ function JobsContainer({
     direction: "asc" | "desc";
   }>({ key: "createdAt", direction: "desc" });
 
-  const jobsPerPage = APP_CONSTANTS.RECORDS_PER_PAGE;
-
   const loadJobs = useCallback(
     async (page: number, filter?: string) => {
       setLoading(true);
       const { success, data, total, message } = await getJobsList(
         page,
-        jobsPerPage,
+        null,
         filter
       );
       if (success && data) {
-        setJobs((prev) => (page === 1 ? data : [...prev, ...data]));
-        setTotalJobs(total);
+        setJobs(data);
         setPage(page);
         setLoading(false);
       } else {
@@ -116,7 +112,7 @@ function JobsContainer({
         return;
       }
     },
-    [jobsPerPage]
+    [t]
   );
 
   const reloadJobs = useCallback(async () => {
@@ -360,27 +356,9 @@ function JobsContainer({
                 sortConfig={sortConfig}
                 onSort={handleSort}
               />
-              <div className="text-xs text-muted-foreground">
-                {t("Showing {start} to {end} of {total} jobs", {
-                  values: { start: 1, end: filteredJobs.length, total: totalJobs },
-                })}
-              </div>
             </>
           )}
-          {jobs.length < totalJobs && (
-            <div className="flex justify-center p-4">
-              <Button
-                size="sm"
-                variant="outline"
-                  onClick={() => loadJobs(page + 1, filterKey)}
-                  disabled={loading}
-                  className="btn btn-primary"
-                >
-                  {loading ? t("Loading...") : t("Load More")}
-                </Button>
-              </div>
-            )}
-          </CardContent>
+        </CardContent>
         <CardFooter></CardFooter>
       </Card>
     </>

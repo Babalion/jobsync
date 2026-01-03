@@ -21,7 +21,7 @@ const getFaviconFromUrl = (siteUrl?: string) => {
 
 export const getCompanyList = async (
   page = 1,
-  limit = 10,
+  limit?: number | null,
   countBy?: string
 ): Promise<any | undefined> => {
   try {
@@ -31,15 +31,15 @@ export const getCompanyList = async (
       throw new Error("Not authenticated");
     }
     const dbUser = await ensureUserExists(user);
-    const skip = (page - 1) * limit;
+    const skip = limit ? (page - 1) * limit : undefined;
 
     const [data, total] = await Promise.all([
       prisma.company.findMany({
         where: {
           createdBy: dbUser.id,
         },
-        skip,
-        take: limit,
+        ...(skip != null ? { skip } : {}),
+        ...(limit != null ? { take: limit } : {}),
         ...(countBy
           ? {
               select: {
@@ -48,6 +48,7 @@ export const getCompanyList = async (
                 value: true,
                 logoUrl: true,
                 website: true,
+                careerSite: true,
                 archetype: true,
                 ownership: true,
                 cultureTag: true,
@@ -58,6 +59,9 @@ export const getCompanyList = async (
                 fitNotes: true,
                 hasWorksCouncil: true,
                 hasCollectiveAgreement: true,
+                locations: {
+                  include: { location: true },
+                },
                 _count: {
                   select: {
                     jobsApplied: {
@@ -98,12 +102,17 @@ export const getAllCompanies = async (): Promise<any | undefined> => {
     }
     const dbUser = await ensureUserExists(user);
 
-    const comapnies = await prisma.company.findMany({
+    const companies = await prisma.company.findMany({
       where: {
         createdBy: dbUser.id,
       },
+      include: {
+        locations: {
+          include: { location: true },
+        },
+      },
     });
-    return comapnies;
+    return companies;
   } catch (error) {
     const msg = "Failed to fetch all companies. ";
     return handleError(error, msg);
@@ -124,6 +133,7 @@ export const addCompany = async (
     const {
       company,
       companyUrl,
+      careerSite,
       archetype,
       ownership,
       industryRole,
@@ -134,6 +144,7 @@ export const addCompany = async (
       fitNotes,
       hasWorksCouncil,
       hasCollectiveAgreement,
+      locations,
     } = data;
 
     const value = company.trim().toLowerCase();
@@ -157,6 +168,7 @@ export const addCompany = async (
     const optionalFields: Record<string, string | boolean | undefined> = {
       logoUrl: finalLogo,
       website,
+      careerSite: careerSite?.trim() || undefined,
       archetype: archetype?.trim() || undefined,
       ownership: ownership?.trim() || undefined,
       industryRole: industryRole?.trim() || undefined,
@@ -169,12 +181,24 @@ export const addCompany = async (
       hasCollectiveAgreement: hasCollectiveAgreement ?? false,
     };
 
+    const locationIds =
+      locations?.filter(Boolean).filter((v, idx, arr) => arr.indexOf(v) === idx) ||
+      [];
+
     const res = await prisma.company.create({
       data: {
         createdBy: dbUser.id,
         value,
         label: company,
         ...optionalFields,
+        locations:
+          locationIds.length > 0
+            ? {
+                create: locationIds.map((locId) => ({
+                  location: { connect: { id: locId } },
+                })),
+              }
+            : undefined,
       },
     });
     revalidatePath("/dashboard/myjobs", "page");
@@ -200,6 +224,7 @@ export const updateCompany = async (
       id,
       company,
       companyUrl,
+      careerSite,
       createdBy,
       archetype,
       ownership,
@@ -211,6 +236,7 @@ export const updateCompany = async (
       fitNotes,
       hasWorksCouncil,
       hasCollectiveAgreement,
+      locations,
     } = data;
 
     if (!id || dbUser.id != createdBy) {
@@ -236,6 +262,7 @@ export const updateCompany = async (
     const optionalFields: Record<string, string | boolean | undefined> = {
       logoUrl: getFaviconFromUrl(website) || undefined,
       website,
+      careerSite: careerSite?.trim() || undefined,
       archetype: archetype?.trim() || undefined,
       ownership: ownership?.trim() || undefined,
       industryRole: industryRole?.trim() || undefined,
@@ -248,6 +275,10 @@ export const updateCompany = async (
       hasCollectiveAgreement: hasCollectiveAgreement ?? false,
     };
 
+    const locationIds =
+      locations?.filter(Boolean).filter((v, idx, arr) => arr.indexOf(v) === idx) ||
+      [];
+
     const res = await prisma.company.update({
       where: {
         id,
@@ -256,6 +287,16 @@ export const updateCompany = async (
         value,
         label: company,
         ...optionalFields,
+        locations: {
+          deleteMany: {},
+          ...(locationIds.length > 0
+            ? {
+                create: locationIds.map((locId) => ({
+                  location: { connect: { id: locId } },
+                })),
+              }
+            : {}),
+        },
       },
     });
 
@@ -282,6 +323,11 @@ export const getCompanyById = async (
     const company = await prisma.company.findUnique({
       where: {
         id: companyId,
+      },
+      include: {
+        locations: {
+          include: { location: true },
+        },
       },
     });
     return company;

@@ -9,6 +9,8 @@ export const AddCompanyFormSchema = z.object({
     })
     .min(1),
   companyUrl: z.string().default("").optional(),
+  careerSite: z.string().default("").optional(),
+  locations: z.array(z.string()).default([]).optional(),
   archetype: z.string().default("").optional(),
   ownership: z.string().default("").optional(),
   industryRole: z.string().default("").optional(),

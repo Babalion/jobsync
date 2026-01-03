@@ -177,6 +177,36 @@ function CompaniesTable({
                       ) : (
                         <span className="font-semibold">{company.label}</span>
                       )}
+                      {company.careerSite && (
+                        <a
+                          className="text-xs text-primary underline"
+                          href={
+                            company.careerSite.startsWith("http")
+                              ? company.careerSite
+                              : `https://${company.careerSite}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {t("Career Site")}
+                        </a>
+                      )}
+                      {company.locations?.length ? (
+                        <div className="flex flex-wrap gap-1 text-xs text-muted-foreground">
+                          {(company.locations as any).map((l: any) => {
+                            const loc = l?.location ?? l;
+                            return (
+                              <span
+                                key={loc.id}
+                                className="rounded-full border px-2 py-0.5"
+                              >
+                                {loc.label}
+                                {loc.country ? `, ${loc.country}` : ""}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </TableCell>

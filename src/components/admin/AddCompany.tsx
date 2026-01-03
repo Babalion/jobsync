@@ -24,10 +24,11 @@ import {
 import { Input } from "../ui/input";
 import { toast } from "../ui/use-toast";
 import { addCompany, updateCompany } from "@/actions/company.actions";
-import { Company } from "@/models/job.model";
+import { Company, JobLocation } from "@/models/job.model";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
 import { useTranslations } from "@/lib/i18n";
+import AddLocation from "./AddLocation";
 
 type AddCompanyProps = {
   reloadCompanies: () => void;
@@ -35,6 +36,8 @@ type AddCompanyProps = {
   resetEditCompany: () => void;
   dialogOpen: boolean;
   setDialogOpen: (e: boolean) => void;
+  locations: JobLocation[];
+  onLocationCreated?: (loc: JobLocation) => void;
 };
 
 function AddCompany({
@@ -43,6 +46,8 @@ function AddCompany({
   resetEditCompany,
   dialogOpen,
   setDialogOpen,
+  locations,
+  onLocationCreated,
 }: AddCompanyProps) {
   const [isPending, startTransition] = useTransition();
   const { t } = useTranslations();
@@ -54,6 +59,8 @@ function AddCompany({
     defaultValues: {
       company: "",
       companyUrl: "",
+      careerSite: "",
+      locations: [],
       archetype: "",
       ownership: "",
       industryRole: "",
@@ -107,6 +114,10 @@ function AddCompany({
           company: editCompany?.label ?? "",
           createdBy: editCompany?.createdBy,
           companyUrl: editCompany?.website ?? "",
+          careerSite: editCompany?.careerSite ?? "",
+          locations:
+            (editCompany as any)?.locations?.map((loc: any) => loc?.location?.id ?? loc?.id) ??
+            [],
           archetype: editCompany?.archetype ?? "",
           ownership: editCompany?.ownership ?? "",
           industryRole: editCompany?.industryRole ?? "",
@@ -225,6 +236,80 @@ function AddCompany({
                               }}
                             />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="careerSite"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("Career Site")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="https://company.com/careers"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="locations"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <FormLabel>{t("Locations")}</FormLabel>
+                            <AddLocation
+                              compact
+                              reloadLocations={() => {}}
+                              onCreated={(loc) => {
+                                onLocationCreated?.(loc);
+                                field.onChange([...(field.value || []), loc.id]);
+                              }}
+                            />
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {locations.map((loc) => {
+                              const checked = field.value?.includes(loc.id);
+                              return (
+                                <label
+                                  key={loc.id}
+                                  className="flex items-center gap-2 rounded border px-3 py-2 text-sm"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className="h-4 w-4"
+                                    checked={checked}
+                                    onChange={(e) => {
+                                      const next = e.target.checked
+                                        ? [...(field.value || []), loc.id]
+                                        : (field.value || []).filter(
+                                            (id: string) => id !== loc.id
+                                          );
+                                      field.onChange(next);
+                                    }}
+                                  />
+                                  <span>
+                                    {loc.label}
+                                    {loc.country ? `, ${loc.country}` : ""}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                            {locations.length === 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                {t("No locations available")}
+                              </p>
+                            )}
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}

@@ -24,7 +24,7 @@ export const getAllJobLocations = async (): Promise<any | undefined> => {
 
 export const getJobLocationsList = async (
   page = 1,
-  limit = 10,
+  limit?: number | null,
   countBy?: string
 ): Promise<any | undefined> => {
   try {
@@ -34,15 +34,15 @@ export const getJobLocationsList = async (
       throw new Error("Not authenticated");
     }
     const dbUser = await ensureUserExists(user);
-    const skip = (page - 1) * limit;
+    const skip = limit ? (page - 1) * limit : undefined;
 
     const [data, total] = await Promise.all([
       prisma.location.findMany({
         where: {
           createdBy: dbUser.id,
         },
-        skip,
-        take: limit,
+        ...(skip != null ? { skip } : {}),
+        ...(limit != null ? { take: limit } : {}),
         ...(countBy
           ? {
               select: {
@@ -148,14 +148,12 @@ export const createJobLocation = async (
       return { data: existing, success: true };
     }
 
-  const { lat, lng } = await geocodeLocation({
-    city: label,
-    zipCode,
-    country,
-  });
-  if (lat == null || lng == null) {
-    throw new Error("Unable to geocode location. Please check city/zip/country.");
-  }
+  const { lat, lng } =
+    (await geocodeLocation({
+      city: label,
+      zipCode,
+      country,
+    })) || {};
 
   const location = await prisma.location.create({
     data: {
@@ -163,8 +161,8 @@ export const createJobLocation = async (
       value: uniqueValue || value,
       zipCode: finalZip || null,
       country: finalCountry || null,
-      lat,
-      lng,
+      lat: lat ?? null,
+      lng: lng ?? null,
       createdBy: dbUser.id,
     },
   });
@@ -199,14 +197,12 @@ export const updateJobLocation = async (
       .join("-")
       .replace(/\s+/g, "-");
 
-  const { lat, lng } = await geocodeLocation({
-    city: label,
-    zipCode,
-    country,
-  });
-  if (lat == null || lng == null) {
-    throw new Error("Unable to geocode location. Please check city/zip/country.");
-  }
+  const { lat, lng } =
+    (await geocodeLocation({
+      city: label,
+      zipCode,
+      country,
+    })) || {};
 
   const updated = await prisma.location.update({
     where: { id },
@@ -215,8 +211,8 @@ export const updateJobLocation = async (
       value: uniqueValue || value,
       zipCode: finalZip || null,
       country: finalCountry || null,
-      lat,
-      lng,
+      lat: lat ?? null,
+      lng: lng ?? null,
     },
   });
     return { data: updated, success: true };

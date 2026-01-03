@@ -1,7 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { APP_CONSTANTS } from "@/lib/constants";
 import { JobLocation } from "@/models/job.model";
 import JobLocationsTable from "./JobLocationsTable";
 import { getJobLocationsList } from "@/actions/jobLocation.actions";
@@ -13,8 +12,6 @@ import { useTranslations } from "@/lib/i18n";
 function JobLocationsContainer() {
   const { t } = useTranslations();
   const [locations, setLocations] = useState<JobLocation[]>([]);
-  const [totalJobLocations, setTotalJobLocations] = useState<number>(0);
-  const [page, setPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{
@@ -22,32 +19,24 @@ function JobLocationsContainer() {
     direction: "asc" | "desc";
   }>({ key: "label", direction: "asc" });
 
-  const recordsPerPage = APP_CONSTANTS.RECORDS_PER_PAGE;
-
   const loadJobLocations = useCallback(
-    async (page: number) => {
+    async () => {
       setLoading(true);
-      const { data, total } = await getJobLocationsList(
-        page,
-        recordsPerPage,
-        "applied"
-      );
+      const { data } = await getJobLocationsList(1, null, "applied");
       if (data) {
-        setLocations((prev) => (page === 1 ? data : [...prev, ...data]));
-        setTotalJobLocations(total);
-        setPage(page);
+        setLocations(data);
         setLoading(false);
       }
     },
-    [recordsPerPage]
+    []
   );
 
   const reloadJobLocations = useCallback(async () => {
-    await loadJobLocations(1);
+    await loadJobLocations();
   }, [loadJobLocations]);
 
   useEffect(() => {
-    (async () => await loadJobLocations(1))();
+    (async () => await loadJobLocations())();
   }, [loadJobLocations]);
 
   const filteredLocations = useMemo(() => {
@@ -135,15 +124,6 @@ function JobLocationsContainer() {
                   sortConfig={sortConfig}
                   onEditLocation={onEditLocation}
                 />
-                <div className="text-xs text-muted-foreground">
-                  {t("Showing {start} to {end} of {total} job locations", {
-                    values: {
-                      start: 1,
-                      end: filteredLocations.length,
-                      total: totalJobLocations,
-                    },
-                  })}
-                </div>
               </>
             )}
           </CardContent>
