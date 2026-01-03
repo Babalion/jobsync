@@ -164,13 +164,20 @@ export const updateJobLocation = async (
     }
 
     const value = label.trim().toLowerCase();
+    const finalZip = (zipCode || "").trim().toLowerCase();
+    const finalCountry = (country || "").trim().toLowerCase();
+    const uniqueValue = [value, finalZip || finalCountry]
+      .filter(Boolean)
+      .join("-")
+      .replace(/\s+/g, "-");
+
     const updated = await prisma.location.update({
       where: { id },
       data: {
         label,
-        value,
-        zipCode: zipCode.trim(),
-        country: country?.trim(),
+        value: uniqueValue || value,
+        zipCode: finalZip || null,
+        country: finalCountry || null,
       },
     });
     return { data: updated, success: true };

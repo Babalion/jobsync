@@ -44,6 +44,7 @@ import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
 import { redirect } from "next/navigation";
 import { Combobox } from "../ComboBox";
+import AddLocation from "../admin/AddLocation";
 
 type AddJobProps = {
   jobStatuses: JobStatus[];
@@ -68,6 +69,7 @@ export function AddJob({
 }: AddJobProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [locationOptions, setLocationOptions] = useState<JobLocation[]>(locations);
   const router = useRouter();
   const form = useForm<z.infer<typeof AddJobFormSchema>>({
     resolver: zodResolver(AddJobFormSchema),
@@ -78,14 +80,15 @@ export function AddJob({
       salaryRange: "1",
       jobUrl: "",
       applied: false,
-      locationZip: "",
-      locationCountry: "",
     },
   });
 
   const { setValue, reset, watch, resetField } = form;
 
   const appliedValue = watch("applied");
+  useEffect(() => {
+    setLocationOptions(locations);
+  }, [locations]);
 
   useEffect(() => {
     if (editJob) {
@@ -96,8 +99,6 @@ export function AddJob({
           title: editJob.JobTitle.id,
           company: editJob.Company.id,
           location: editJob.Location.id,
-          locationZip: editJob.Location.zipCode || "",
-          locationCountry: editJob.Location.country || "",
           type: editJob.jobType,
           source: editJob.JobSource.id,
           status: editJob.Status.id,
@@ -111,9 +112,6 @@ export function AddJob({
         { keepDefaultValues: true }
       );
       setDialogOpen(true);
-    } else {
-      setValue("locationZip", "");
-      setValue("locationCountry", "");
     }
   }, [editJob, reset]);
 
@@ -192,28 +190,8 @@ export function AddJob({
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4"
               >
-                {/* Job URL */}
-                <div className="md:col-span-2">
-                  <FormField
-                    control={form.control}
-                    name="jobUrl"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Job URL</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Copy and paste job link here"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
                 {/* Job Title */}
-                <div>
+                <div className="md:col-span-2">
                   <FormField
                     control={form.control}
                     name="title"
@@ -250,60 +228,43 @@ export function AddJob({
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
-                </div>
+                />
+              </div>
                 {/* Location */}
-                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2">
                   <FormField
                     control={form.control}
                     name="location"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Job Location</FormLabel>
-                        <FormControl>
-                          <Combobox
-                            options={locations}
-                            field={field}
-                            creatable
-                            extraPayload={{
-                              locationZip: form.getValues("locationZip"),
-                              locationCountry: form.getValues("locationCountry"),
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Combobox
+                              options={locationOptions}
+                              field={field}
+                              creatable={false}
+                            />
+                          </FormControl>
+                          <AddLocation
+                            compact
+                            reloadLocations={async () => {
+                              // just trigger options refresh from existing array
+                              setLocationOptions([...locationOptions]);
+                            }}
+                            onCreated={(loc) => {
+                              setLocationOptions((prev) => [loc, ...prev]);
+                              setValue("location", loc.id);
                             }}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="locationZip"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Zip / Postal Code</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. 10115" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="locationCountry"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Country</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Germany" />
-                        </FormControl>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                {/* Job Type */}
-                <div>
+                {/* Job Type & Source */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:col-span-2">
                   <FormField
                     control={form.control}
                     name="type"
@@ -334,9 +295,6 @@ export function AddJob({
                       </FormItem>
                     )}
                   />
-                </div>
-                {/* Job Source */}
-                <div>
                   <FormField
                     control={form.control}
                     name="source"
@@ -350,39 +308,8 @@ export function AddJob({
                   />
                 </div>
 
-                {/* Applied */}
-                <div
-                  className="flex items-center"
-                  data-testid="switch-container"
-                >
-                  <FormField
-                    control={form.control}
-                    name="applied"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row">
-                        <Switch
-                          id="applied-switch"
-                          checked={field.value}
-                          onCheckedChange={(a) => {
-                            field.onChange(a);
-                            jobAppliedChange(a);
-                          }}
-                        />
-                        <FormLabel
-                          htmlFor="applied-switch"
-                          className="flex items-center ml-4 mb-2"
-                        >
-                          {field.value ? "Applied" : "Not Applied"}
-                        </FormLabel>
-
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Status */}
-                <div>
+                {/* Status & Applied */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:col-span-2">
                   <FormField
                     control={form.control}
                     name="status"
@@ -398,10 +325,35 @@ export function AddJob({
                       </FormItem>
                     )}
                   />
+                  <div className="flex items-center" data-testid="switch-container">
+                    <FormField
+                      control={form.control}
+                      name="applied"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row">
+                          <Switch
+                            id="applied-switch"
+                            checked={field.value}
+                            onCheckedChange={(a) => {
+                              field.onChange(a);
+                              jobAppliedChange(a);
+                            }}
+                          />
+                          <FormLabel
+                            htmlFor="applied-switch"
+                            className="flex items-center ml-4 mb-2"
+                          >
+                            {field.value ? "Applied" : "Not Applied"}
+                          </FormLabel>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
-                {/* Date Applied */}
-                <div className="flex flex-col">
+                {/* Dates */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:col-span-2">
                   <FormField
                     control={form.control}
                     name="dateApplied"
@@ -417,10 +369,6 @@ export function AddJob({
                       </FormItem>
                     )}
                   />
-                </div>
-
-                {/* Due Date */}
-                <div>
                   <FormField
                     control={form.control}
                     name="dueDate"
@@ -438,8 +386,8 @@ export function AddJob({
                   />
                 </div>
 
-                {/* Salary Range */}
-                <div>
+                {/* Salary Range & Job URL */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:col-span-2">
                   <FormField
                     control={form.control}
                     name="salaryRange"
@@ -452,6 +400,19 @@ export function AddJob({
                             options={SALARY_RANGES}
                             field={field}
                           />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="jobUrl"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Job URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Copy and paste job link here" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

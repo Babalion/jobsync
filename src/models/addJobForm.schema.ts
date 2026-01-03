@@ -24,14 +24,8 @@ export const AddJobFormSchema = z.object({
     .min(2, {
       message: "Location name must be at least 2 characters.",
     }),
-  locationZip: z
-    .string({
-      required_error: "Zip/postal code is required.",
-    })
-    .min(2, {
-      message: "Zip/postal code must be at least 2 characters.",
-    }),
-  locationCountry: z.string().optional(),
+  locationZip: z.string().optional().default(""),
+  locationCountry: z.string().optional().default(""),
   type: z.string().min(1),
   source: z
     .string({

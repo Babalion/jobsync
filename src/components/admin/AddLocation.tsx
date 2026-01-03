@@ -37,9 +37,17 @@ type AddLocationProps = {
   reloadLocations: () => void;
   editLocation?: JobLocation | null;
   resetEditLocation?: () => void;
+  compact?: boolean;
+  onCreated?: (loc: JobLocation) => void;
 };
 
-function AddLocation({ reloadLocations, editLocation, resetEditLocation }: AddLocationProps) {
+function AddLocation({
+  reloadLocations,
+  editLocation,
+  resetEditLocation,
+  compact,
+  onCreated,
+}: AddLocationProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -78,12 +86,15 @@ function AddLocation({ reloadLocations, editLocation, resetEditLocation }: AddLo
             values.createdBy
           )
         : await createJobLocation(values.city, values.zipCode, values.country);
-      const { success, message } = action || {};
+      const { success, message, data } = action || {};
       if (success) {
         toast({
           variant: "success",
           description: values.id ? "Location updated" : "Location created",
         });
+        if (data) {
+          onCreated?.(data as JobLocation);
+        }
         form.reset();
         setOpen(false);
         reloadLocations();
@@ -101,15 +112,18 @@ function AddLocation({ reloadLocations, editLocation, resetEditLocation }: AddLo
   return (
     <>
       <Button
-        size="sm"
+        size={compact ? "icon" : "sm"}
         variant="outline"
-        className="h-8 gap-1"
+        className={compact ? "h-10 w-10" : "h-8 gap-1"}
+        type="button"
         onClick={() => setOpen(true)}
       >
         <PlusCircle className="h-3.5 w-3.5" />
-        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-          Add Location
-        </span>
+        {!compact && (
+          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+            Add Location
+          </span>
+        )}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
@@ -117,7 +131,13 @@ function AddLocation({ reloadLocations, editLocation, resetEditLocation }: AddLo
             <DialogTitle>{form.getValues("id") ? "Edit Location" : "Add Location"}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.stopPropagation();
+                form.handleSubmit(onSubmit)(e);
+              }}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="city"
