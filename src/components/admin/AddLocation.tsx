@@ -39,6 +39,7 @@ type AddLocationProps = {
   resetEditLocation?: () => void;
   compact?: boolean;
   onCreated?: (loc: JobLocation) => void;
+  renderTrigger?: boolean;
 };
 
 function AddLocation({
@@ -47,6 +48,7 @@ function AddLocation({
   resetEditLocation,
   compact,
   onCreated,
+  renderTrigger = true,
 }: AddLocationProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -111,20 +113,22 @@ function AddLocation({
 
   return (
     <>
-      <Button
-        size={compact ? "icon" : "sm"}
-        variant="outline"
-        className={compact ? "h-10 w-10" : "h-8 gap-1"}
-        type="button"
-        onClick={() => setOpen(true)}
-      >
-        <PlusCircle className="h-3.5 w-3.5" />
-        {!compact && (
-          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Add Location
-          </span>
-        )}
-      </Button>
+      {renderTrigger && (
+        <Button
+          size={compact ? "icon" : "sm"}
+          variant="outline"
+          className={compact ? "h-10 w-10" : "h-8 gap-1"}
+          type="button"
+          onClick={() => setOpen(true)}
+        >
+          <PlusCircle className="h-3.5 w-3.5" />
+          {!compact && (
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+              Add Location
+            </span>
+          )}
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

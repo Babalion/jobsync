@@ -8,8 +8,8 @@ import { getJobLocationsList } from "@/actions/jobLocation.actions";
 import Loading from "../Loading";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import AddLocation from "./AddLocation";
 import { toast } from "../ui/use-toast";
+import AddLocation from "./AddLocation";
 
 function JobLocationsContainer() {
   const [locations, setLocations] = useState<JobLocation[]>([]);
@@ -18,7 +18,7 @@ function JobLocationsContainer() {
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{
-    key: "label" | "zipCode" | "country" | "jobsApplied";
+    key: "label" | "zipCode" | "country" | "jobsApplied" | "lat";
     direction: "asc" | "desc";
   }>({ key: "label", direction: "asc" });
 
@@ -68,6 +68,8 @@ function JobLocationsContainer() {
             return l.zipCode || "";
           case "country":
             return l.country || "";
+          case "lat":
+            return l.lat ?? 0;
           case "jobsApplied":
             return l._count?.jobsApplied ?? 0;
           case "label":
@@ -85,7 +87,7 @@ function JobLocationsContainer() {
     return sorted;
   }, [locations, searchTerm, sortConfig]);
 
-  const handleSort = (key: "label" | "zipCode" | "country" | "jobsApplied") => {
+  const handleSort = (key: "label" | "zipCode" | "country" | "jobsApplied" | "lat") => {
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
@@ -112,7 +114,13 @@ function JobLocationsContainer() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="h-8 w-[220px]"
                 />
-                <AddLocation reloadLocations={reloadJobLocations} />
+                <AddLocation
+                  reloadLocations={reloadJobLocations}
+                  resetEditLocation={resetEditLocation}
+                  onCreated={(loc) => {
+                    setLocations((prev) => [loc as JobLocation, ...prev]);
+                  }}
+                />
               </div>
             </div>
           </CardHeader>
@@ -137,19 +145,6 @@ function JobLocationsContainer() {
                 </div>
               </>
             )}
-            {locations.length < totalJobLocations && (
-              <div className="flex justify-center p-4">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => loadJobLocations(page + 1)}
-                  disabled={loading}
-                  className="btn btn-primary"
-                >
-                  {loading ? "Loading..." : "Load More"}
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -157,6 +152,7 @@ function JobLocationsContainer() {
         reloadLocations={reloadJobLocations}
         editLocation={editLocation}
         resetEditLocation={resetEditLocation}
+        renderTrigger={false}
       />
     </>
   );

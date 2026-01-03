@@ -63,5 +63,34 @@ export const getCoordsForLocation = (
   if (!base) {
     return { lat: 0, lng: 0 };
   }
+
+  const extractedZip =
+    zipCode?.trim() ||
+    locationLabel?.match(/(\d{5})/)?.[1] ||
+    countryLabel?.match(/(\d{5})/)?.[1] ||
+    "";
+
+  // German ZIP heuristic mapping into Germany bounding box
+  const zipMatch = extractedZip.match(/^(\d{5})$/);
+  const countryLower = (countryLabel || "").toLowerCase();
+  const isGermany =
+    countryLower.includes("germany") ||
+    countryLower.includes("deutschland") ||
+    (zipMatch ? true : false);
+
+  if (isGermany && zipMatch) {
+    const zipNum = parseInt(zipMatch[1], 10);
+    // Germany approx bounds
+    const minLat = 47.0;
+    const maxLat = 55.1;
+    const minLng = 5.5;
+    const maxLng = 15.5;
+    // Normalize within plausible DE zip range (01000-99999)
+    const norm = (zipNum - 1000) / (99999 - 1000);
+    const lat = minLat + (maxLat - minLat) * norm;
+    const lng = minLng + (maxLng - minLng) * (1 - norm);
+    return { lat, lng };
+  }
+
   return COUNTRY_COORDS[base] || hashToEuroCoord(base);
 };

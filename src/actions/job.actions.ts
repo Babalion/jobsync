@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { handleError } from "@/lib/utils";
 import { AddJobFormSchema } from "@/models/addJobForm.schema";
 import { JOB_TYPES, JobStatus } from "@/models/job.model";
+import { geocodeLocation } from "@/lib/geocode";
 import { getCurrentUser } from "@/utils/user.utils";
 import { ensureUserExists } from "@/utils/user.ensure";
 import { revalidatePath } from "next/cache";
@@ -199,10 +200,19 @@ export const createLocation = async (
       throw new Error("Please provide location name");
     }
 
-    const existing = await prisma.location.findFirst({
-      where: {
-        value: uniqueValue || value,
-        createdBy: dbUser.id,
+  const { lat, lng } = await geocodeLocation({
+    city: label,
+    zipCode: zipCode || undefined,
+    country,
+  });
+  if (lat == null || lng == null) {
+    throw new Error("Unable to geocode location. Please check city/zip/country.");
+  }
+
+  const existing = await prisma.location.findFirst({
+    where: {
+      value: uniqueValue || value,
+      createdBy: dbUser.id,
       },
     });
     if (existing) {
@@ -215,6 +225,8 @@ export const createLocation = async (
         value: uniqueValue || value,
         zipCode: finalZip || null,
         country: finalCountry || null,
+        lat,
+        lng,
         createdBy: dbUser.id,
       },
     });

@@ -82,6 +82,8 @@ export interface JobLocation {
   label: string;
   value: string;
   zipCode?: string;
+  lat?: number;
+  lng?: number;
   stateProv?: string;
   country?: string;
   createdBy: string;

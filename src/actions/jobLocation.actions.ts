@@ -1,6 +1,7 @@
 "use server";
 import prisma from "@/lib/db";
 import { handleError } from "@/lib/utils";
+import { geocodeLocation } from "@/lib/geocode";
 import { getCurrentUser } from "@/utils/user.utils";
 import { ensureUserExists } from "@/utils/user.ensure";
 
@@ -50,6 +51,8 @@ export const getJobLocationsList = async (
                 value: true,
                 zipCode: true,
                 country: true,
+                lat: true,
+                lng: true,
                 _count: {
                   select: {
                     jobsApplied: {
@@ -131,15 +134,40 @@ export const createJobLocation = async (
     if (!value) {
       throw new Error("Please provide location name");
     }
-    const location = await prisma.location.create({
-      data: {
-        label,
-        value,
-        zipCode: zipCode.trim(),
-        country: country?.trim(),
-        createdBy: dbUser.id,
-      },
+    const finalZip = (zipCode || "").trim().toLowerCase();
+    const finalCountry = (country || "").trim().toLowerCase();
+    const uniqueValue = [value, finalZip || finalCountry]
+      .filter(Boolean)
+      .join("-")
+      .replace(/\s+/g, "-");
+
+    const existing = await prisma.location.findFirst({
+      where: { value: uniqueValue || value, createdBy: dbUser.id },
     });
+    if (existing) {
+      return { data: existing, success: true };
+    }
+
+  const { lat, lng } = await geocodeLocation({
+    city: label,
+    zipCode,
+    country,
+  });
+  if (lat == null || lng == null) {
+    throw new Error("Unable to geocode location. Please check city/zip/country.");
+  }
+
+  const location = await prisma.location.create({
+    data: {
+      label,
+      value: uniqueValue || value,
+      zipCode: finalZip || null,
+      country: finalCountry || null,
+      lat,
+      lng,
+      createdBy: dbUser.id,
+    },
+  });
     return { data: location, success: true };
   } catch (error) {
     const msg = "Failed to create job location. ";
@@ -171,15 +199,26 @@ export const updateJobLocation = async (
       .join("-")
       .replace(/\s+/g, "-");
 
-    const updated = await prisma.location.update({
-      where: { id },
-      data: {
-        label,
-        value: uniqueValue || value,
-        zipCode: finalZip || null,
-        country: finalCountry || null,
-      },
-    });
+  const { lat, lng } = await geocodeLocation({
+    city: label,
+    zipCode,
+    country,
+  });
+  if (lat == null || lng == null) {
+    throw new Error("Unable to geocode location. Please check city/zip/country.");
+  }
+
+  const updated = await prisma.location.update({
+    where: { id },
+    data: {
+      label,
+      value: uniqueValue || value,
+      zipCode: finalZip || null,
+      country: finalCountry || null,
+      lat,
+      lng,
+    },
+  });
     return { data: updated, success: true };
   } catch (error) {
     const msg = "Failed to update job location. ";

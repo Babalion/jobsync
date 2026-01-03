@@ -59,6 +59,8 @@ model Location {
   label          String
   value          String
   zipCode        String?          @default("")
+  lat            Float?
+  lng            Float?
   stateProv      String?
   country        String?
   jobsApplied    Job[]

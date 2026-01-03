@@ -88,7 +88,7 @@ function JobLocationsTable({
     sortKey,
   }: {
     label: string;
-    sortKey: "label" | "zipCode" | "country" | "jobsApplied";
+    sortKey: "label" | "zipCode" | "country" | "jobsApplied" | "lat";
   }) => {
     const isActive = sortConfig.key === sortKey;
     const direction = sortConfig.direction === "asc" ? "↑" : "↓";
@@ -120,6 +120,7 @@ function JobLocationsTable({
             <TableHead>
               <SortButton label="Jobs" sortKey="jobsApplied" />
             </TableHead>
+            <TableHead className="hidden md:table-cell">Lat / Lng</TableHead>
             <TableHead></TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
@@ -141,6 +142,11 @@ function JobLocationsTable({
                   <Badge variant="secondary">
                     {location._count?.jobsApplied ?? 0}
                   </Badge>
+                </TableCell>
+                <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+                  {location.lat != null && location.lng != null
+                    ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
+                    : "—"}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -173,15 +179,6 @@ function JobLocationsTable({
           })}
         </TableBody>
       </Table>
-      <DeleteAlertDialog
-        pageTitle="location"
-        open={alert.openState}
-        onOpenChange={() => setAlert({ openState: false, deleteAction: false })}
-        onDelete={() => deleteJobLocation(alert.itemId!)}
-        alertTitle={alert.title}
-        alertDescription={alert.description}
-        deleteAction={alert.deleteAction}
-      />
     </>
   );
 }
