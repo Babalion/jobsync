@@ -1,9 +1,13 @@
 const { STATUS_DATA, JOB_SOURCES } = require("../src/lib/data/seedData");
-const { execSync } = require("child_process");
 const { PrismaClient } = require("@prisma/client");
+const { PrismaLibSql } = require("@prisma/adapter-libsql");
 const bcrypt = require("bcryptjs");
 
-const prisma = new PrismaClient();
+const adapter = new PrismaLibSql({
+  url: process.env.DATABASE_URL || "file:./prisma/dev.db",
+});
+
+const prisma = new PrismaClient({ adapter });
 
 async function seedUser() {
   try {
@@ -84,20 +88,7 @@ async function seedJobSouces() {
   }
 }
 
-async function ensureDatabase() {
-  try {
-    execSync("npx prisma db push --skip-generate", {
-      stdio: "inherit",
-      env: { ...process.env },
-    });
-  } catch (error) {
-    console.error("Failed to sync database schema before seeding", error);
-    throw error;
-  }
-}
-
 async function main() {
-  await ensureDatabase();
   await seedUser();
   await seedStatus();
   await seedJobSouces();

@@ -1,11 +1,14 @@
-# Use the official Node.js LTS image as the base image
-FROM node:20.19-alpine AS base
+# Use the official Node.js LTS image as the base image (glibc for native deps)
+FROM node:20.19-bookworm-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
 
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+# Minimal tools; bookworm already includes glibc for native modules
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    openssl \
+  && rm -rf /var/lib/apt/lists/*
 # Set the working directory
 WORKDIR /app
 
@@ -60,6 +63,7 @@ RUN npm install prisma@7.2.0 @prisma/adapter-libsql --no-save
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/src/lib/data ./src/lib/data
 COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
@@ -69,7 +73,10 @@ EXPOSE 3000
 
 ENV PORT=3000
 
-# Start as root, fix /data permissions, then run app as nextjs user
-# Using 'su' which is built into Alpine base image
+# Start as root, fix /data permissions, copy bundled dev DB if missing, then run app as nextjs user
 CMD chown -R nextjs:nodejs /data && \
-    exec su -s /bin/sh nextjs -c "npx prisma migrate deploy && npm run seed && node server.js"
+    if [ ! -f /data/dev.db ]; then cp /app/prisma/dev.db /data/dev.db; chown nextjs:nodejs /data/dev.db; fi && \
+    exec su -s /bin/sh nextjs -c "\
+      export DATABASE_URL=${DATABASE_URL:-file:/data/dev.db} && \
+      npm run seed && \
+      node server.js"
