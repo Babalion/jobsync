@@ -30,13 +30,14 @@ import { Switch } from "../ui/switch";
 import { useTranslations } from "@/lib/i18n";
 import AddLocation from "./AddLocation";
 
+// Modal form for creating/updating companies; supports inline location creation.
 type AddCompanyProps = {
   reloadCompanies: () => void;
   editCompany?: Company | null;
   resetEditCompany: () => void;
   dialogOpen: boolean;
   setDialogOpen: (e: boolean) => void;
-  locations: JobLocation[];
+  locations?: JobLocation[];
   onLocationCreated?: (loc: JobLocation) => void;
 };
 
@@ -46,7 +47,7 @@ function AddCompany({
   resetEditCompany,
   dialogOpen,
   setDialogOpen,
-  locations,
+  locations = [],
   onLocationCreated,
 }: AddCompanyProps) {
   const [isPending, startTransition] = useTransition();
@@ -106,6 +107,7 @@ function AddCompany({
   const innovationOptions = ["hoch", "mittel", "niedrig"];
   const cultureOptions = ["engineering-first", "research-first", "policy-first", "sales-first"];
 
+  // Populate form when editing an existing company.
   useEffect(() => {
     if (editCompany) {
       reset(

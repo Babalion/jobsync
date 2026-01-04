@@ -6,12 +6,14 @@ export interface JobForm {
   type: string;
   company: string;
   location: string;
+  locationZip: string;
+  locationCountry: string;
   status: string;
   dueDate: Date;
   dateApplied?: Date;
   salaryRange: string;
   jobDescription: string;
-  jobUrl?: string;
+  jobUrl: string;
   applied: boolean;
 }
 

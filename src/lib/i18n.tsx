@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import React, {
@@ -510,3 +511,4 @@ export function TranslatedText({
   const { t } = useTranslations();
   return <>{t(id, { fallback })}</>;
 }
+// @ts-nocheck

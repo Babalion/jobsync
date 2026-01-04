@@ -11,6 +11,7 @@ export const AddCompanyFormSchema = z.object({
   companyUrl: z.string().default("").optional(),
   careerSite: z.string().default("").optional(),
   locations: z.array(z.string()).default([]).optional(),
+  logoUrl: z.string().default("").optional(),
   archetype: z.string().default("").optional(),
   ownership: z.string().default("").optional(),
   industryRole: z.string().default("").optional(),

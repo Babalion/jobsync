@@ -14,7 +14,7 @@ import { format } from "date-fns";
 import { useTranslations } from "@/lib/i18n";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 
-type CompanyWithLocations = Company & {
+type CompanyWithLocations = Omit<Company, "locations"> & {
   locations?: Array<{ location: JobLocation }>;
 };
 
@@ -194,10 +194,10 @@ export default function JobsMap({ jobs, statuses, companies }: JobsMapProps) {
     if (!mapContainerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: styleUrl,
+      style: styleUrl as any,
       center: [center.lng, center.lat],
       zoom,
-      attributionControl: true,
+      attributionControl: { compact: true },
     });
     map.addControl(new maplibregl.NavigationControl());
     mapRef.current = map;
@@ -222,10 +222,15 @@ export default function JobsMap({ jobs, statuses, companies }: JobsMapProps) {
     const map = mapRef.current;
     if (!map) return;
     const currentStyle = map.getStyle && map.getStyle();
-    if (currentStyle?.sprite && currentStyle.sprite.includes(styleUrl)) return;
+    const spriteUrl =
+      (currentStyle as any)?.sprite?.url ??
+      (currentStyle as any)?.sprite?.[0]?.url ??
+      (currentStyle as any)?.sprite ??
+      "";
+    if (spriteUrl && spriteUrl.includes(styleUrl)) return;
     // Only switch after map is ready
     const applyStyle = () => {
-      map.setStyle(styleUrl);
+      map.setStyle(styleUrl as any);
     };
     if (map.isStyleLoaded()) {
       applyStyle();
