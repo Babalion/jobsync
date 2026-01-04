@@ -4,8 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+    networks:
+      - proxynet
     environment:
       # Please do not forget to create and update your .env file
       - NODE_ENV=production
@@ -18,3 +18,8 @@ services:
     volumes:
       - ./jobsyncdb/data:/data
     restart: unless-stopped
+
+networks:
+  proxynet:
+    name: nginx-network
+    external: true

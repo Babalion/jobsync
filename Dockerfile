@@ -1,5 +1,5 @@
-# Use the official Node.js 22 LTS image as the base image
-FROM node:20.18.0-alpine AS base
+# Use the official Node.js LTS image as the base image
+FROM node:20.19-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -24,7 +24,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ENV DATABASE_URL=file:/data/dev.db
+# Use local path for generate; runtime overrides DATABASE_URL via env
+ENV DATABASE_URL=file:./prisma/dev.db
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -52,8 +53,8 @@ RUN addgroup --system --gid 1001 nodejs && \
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# Set up /data directory with the right permissions
-RUN npm install prisma@6.19.0 --no-save
+# Set up /data directory with the right permissions and ship Prisma CLI/adapter for migrations
+RUN npm install prisma@7.2.0 @prisma/adapter-libsql --no-save
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
