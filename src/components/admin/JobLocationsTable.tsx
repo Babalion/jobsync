@@ -30,10 +30,10 @@ type JobLocationsTableProps = {
   jobLocations: JobLocation[];
   reloadJobLocations: () => void;
   sortConfig: {
-    key: "label" | "zipCode" | "country" | "jobsApplied";
+    key: "label" | "zipCode" | "country" | "jobsApplied" | "lat";
     direction: "asc" | "desc";
   };
-  onSort: (key: "label" | "zipCode" | "country" | "jobsApplied") => void;
+  onSort: (key: "label" | "zipCode" | "country" | "jobsApplied" | "lat") => void;
   onEditLocation?: (location: JobLocation) => void;
 };
 
