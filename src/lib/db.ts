@@ -1,11 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const prismaClientSingleton = () => {
-  return new PrismaClient();
-  //   {
-  //   log: ["query"],
-  // }
-};
+const adapter = new PrismaLibSql({
+  url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
+});
+
+const prismaClientSingleton = () => new PrismaClient({ adapter });
 
 declare const globalThis: {
   prismaGlobal: ReturnType<typeof prismaClientSingleton>;
