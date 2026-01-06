@@ -80,7 +80,7 @@ function JobLocationsTable({
         toast({
           variant: "destructive",
           title: t("Error!"),
-          description: message,
+          description: t(message ?? "Unknown error occurred."),
         });
       }
     }
@@ -184,6 +184,15 @@ function JobLocationsTable({
           })}
         </TableBody>
       </Table>
+      <DeleteAlertDialog
+        pageTitle="Job location"
+        open={alert.openState}
+        onOpenChange={() => setAlert({ openState: false, deleteAction: false })}
+        onDelete={() => deleteJobLocation(alert.itemId!)}
+        alertTitle={alert.title}
+        alertDescription={alert.description}
+        deleteAction={alert.deleteAction}
+      />
     </>
   );
 }

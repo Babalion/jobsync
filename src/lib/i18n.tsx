@@ -88,6 +88,13 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     "Downloaded successfully!": "Downloaded successfully!",
     "Failed to download jobs!": "Failed to download jobs!",
     "Unknown error occurred.": "Unknown error occurred.",
+    "Not authenticated": "Not authenticated",
+    "Please provide company id": "Please provide company id",
+    "Company not found or no user privileges":
+      "Company not found or no user privileges",
+    "Please provide location id": "Please provide location id",
+    "Location not found or no user privileges":
+      "Location not found or no user privileges",
     "Showing {start} to {end} of {total} jobs":
       "Showing {start} to {end} of {total} jobs",
     "Showing {start} to {end} of {total} companies":
@@ -294,6 +301,13 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     "Downloaded successfully!": "Erfolgreich heruntergeladen!",
     "Failed to download jobs!": "Jobs konnten nicht heruntergeladen werden!",
     "Unknown error occurred.": "Unbekannter Fehler aufgetreten.",
+    "Not authenticated": "Nicht angemeldet",
+    "Please provide company id": "Bitte gib die Unternehmens-ID an.",
+    "Company not found or no user privileges":
+      "Unternehmen nicht gefunden oder keine Berechtigung.",
+    "Please provide location id": "Bitte gib die Standort-ID an.",
+    "Location not found or no user privileges":
+      "Standort nicht gefunden oder keine Berechtigung.",
     "Showing {start} to {end} of {total} jobs":
       "Zeige {start} bis {end} von {total} Jobs",
     "Showing {start} to {end} of {total} companies":

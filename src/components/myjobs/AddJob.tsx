@@ -253,16 +253,16 @@ export function AddJob({
                               creatable={false}
                             />
                           </FormControl>
-                          <AddLocation
-                            compact
-                            reloadLocations={async () => {
-                              // just trigger options refresh from existing array
-                              setLocationOptions([...locationOptions]);
-                            }}
-                            onCreated={(loc) => {
-                              setLocationOptions((prev) => [loc, ...prev]);
-                              setValue("location", loc.id);
-                            }}
+                            <AddLocation
+                              compact
+                              reloadLocations={async () => {
+                              // keep current options while triggering a re-render
+                              setLocationOptions((prev) => [...prev]);
+                              }}
+                              onCreated={(loc) => {
+                                setLocationOptions((prev) => [loc, ...prev]);
+                                setValue("location", loc.id);
+                              }}
                           />
                         </div>
                         <FormMessage />

@@ -82,7 +82,7 @@ function CompaniesTable({
         toast({
           variant: "destructive",
           title: t("Error!"),
-          description: message,
+          description: t(message ?? "Unknown error occurred."),
         });
       }
     }

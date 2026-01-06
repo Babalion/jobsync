@@ -93,10 +93,26 @@ export const deleteJobLocationById = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    if (!locationId) {
+      throw new Error("Please provide location id");
+    }
+    const dbUser = await ensureUserExists(user);
+    const location = await prisma.location.findFirst({
+      where: {
+        id: locationId,
+        createdBy: dbUser.id,
+      },
+      select: { id: true },
+    });
+
+    if (!location) {
+      throw new Error("Location not found or no user privileges");
+    }
 
     const jobs = await prisma.job.count({
       where: {
         locationId,
+        userId: dbUser.id,
       },
     });
 
@@ -106,12 +122,19 @@ export const deleteJobLocationById = async (
       );
     }
 
-    const res = await prisma.location.delete({
-      where: {
-        id: locationId,
-        createdBy: user.id,
-      },
-    });
+    const transactionResult = await prisma.$transaction([
+      prisma.companyLocation.deleteMany({
+        where: {
+          locationId,
+        },
+      }),
+      prisma.location.delete({
+        where: {
+          id: locationId,
+        },
+      }),
+    ]);
+    const res = transactionResult[1];
     return { res, success: true };
   } catch (error) {
     const msg = "Failed to delete job location.";

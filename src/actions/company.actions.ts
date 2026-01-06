@@ -349,10 +349,26 @@ export const deleteCompanyById = async (
     if (!user) {
       throw new Error("Not authenticated");
     }
+    if (!companyId) {
+      throw new Error("Please provide company id");
+    }
+    const dbUser = await ensureUserExists(user);
+    const company = await prisma.company.findFirst({
+      where: {
+        id: companyId,
+        createdBy: dbUser.id,
+      },
+      select: { id: true },
+    });
+
+    if (!company) {
+      throw new Error("Company not found or no user privileges");
+    }
 
     const jobs = await prisma.job.count({
       where: {
         companyId,
+        userId: dbUser.id,
       },
     });
 
@@ -362,12 +378,19 @@ export const deleteCompanyById = async (
       );
     }
 
-    const res = await prisma.company.delete({
-      where: {
-        id: companyId,
-        createdBy: user.id,
-      },
-    });
+    const transactionResult = await prisma.$transaction([
+      prisma.companyLocation.deleteMany({
+        where: {
+          companyId,
+        },
+      }),
+      prisma.company.delete({
+        where: {
+          id: companyId,
+        },
+      }),
+    ]);
+    const res = transactionResult[1];
     return { res, success: true };
   } catch (error) {
     const msg = "Failed to delete company.";
