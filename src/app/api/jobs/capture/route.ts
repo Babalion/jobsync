@@ -4,6 +4,11 @@ import prisma from "@/lib/db";
 import { getCurrentUser } from "@/utils/user.utils";
 import { ensureUserExists } from "@/utils/user.ensure";
 import { arePotentialDuplicates } from "@/utils/deduplication.utils";
+import { 
+  DUPLICATE_CHECK_TIME_WINDOW_MS, 
+  MAX_DUPLICATE_CHECK_JOBS,
+  DEFAULT_JOB_STATUS 
+} from "@/utils/constants";
 
 // Schema for validating incoming job capture data
 const JobCaptureSchema = z.object({
@@ -153,7 +158,7 @@ export async function POST(request: NextRequest) {
 
     // Get default status (Draft)
     const defaultStatus = await prisma.jobStatus.findFirst({
-      where: { value: "draft" },
+      where: { value: DEFAULT_JOB_STATUS },
     });
 
     if (!defaultStatus) {
@@ -170,13 +175,13 @@ export async function POST(request: NextRequest) {
         companyId: company.id,
         // Only check jobs from the last 30 days to improve performance
         createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - DUPLICATE_CHECK_TIME_WINDOW_MS),
         },
       },
       include: {
         JobTitle: true,
       },
-      take: 50, // Limit to most recent 50 jobs
+      take: MAX_DUPLICATE_CHECK_JOBS,
     });
 
     // Check for potential duplicates

@@ -7,6 +7,7 @@ import { geocodeLocation } from "@/lib/geocode";
 import { getCurrentUser } from "@/utils/user.utils";
 import { ensureUserExists } from "@/utils/user.ensure";
 import { arePotentialDuplicates } from "@/utils/deduplication.utils";
+import { DUPLICATE_CHECK_TIME_WINDOW_MS, MAX_DUPLICATE_CHECK_JOBS } from "@/utils/constants";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -441,14 +442,14 @@ export const findDuplicateJobs = async (
         userId: dbUser.id,
         companyId: companyId,
         createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - DUPLICATE_CHECK_TIME_WINDOW_MS),
         },
       },
       include: {
         JobTitle: true,
         Company: true,
       },
-      take: 50,
+      take: MAX_DUPLICATE_CHECK_JOBS,
     });
 
     const duplicates = [];

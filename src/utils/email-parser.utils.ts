@@ -2,6 +2,8 @@
  * Utilities for parsing job information from email content
  */
 
+import { MAX_COMPANY_NAME_LENGTH, MAX_EMAIL_DESCRIPTION_LENGTH } from "./constants";
+
 export interface ParsedJobFromEmail {
   jobTitle?: string;
   company?: string;
@@ -157,7 +159,7 @@ export function parseJobFromEmail(
     company: extractCompany(plainText, fromAddress),
     location: extractLocation(plainText),
     jobUrl,
-    description: emailBody.substring(0, 1000), // Limit description length
+    description: emailBody.substring(0, MAX_EMAIL_DESCRIPTION_LENGTH),
     salaryRange: extractSalaryRange(plainText),
   };
 }
@@ -197,7 +199,7 @@ export function parseIndeedJobAlert(emailBody: string): ParsedJobFromEmail {
 
   // More restrictive company matching - match company name followed by "is hiring"
   // The (?!\n) prevents matching across lines
-  const companyMatch = emailBody.match(/^([A-Z][a-zA-Z\s&]{1,40}?)\s+is hiring/im);
+  const companyMatch = emailBody.match(new RegExp(`^([A-Z][a-zA-Z\\s&]{1,${MAX_COMPANY_NAME_LENGTH}}?)\\s+is hiring`, 'im'));
   if (companyMatch) parsed.company = companyMatch[1].trim().replace(/\s+/g, ' ');
 
   const urls = extractUrls(emailBody);

@@ -101,15 +101,7 @@ export function normalizeJobTitle(title: string | null | undefined): string {
   // Replace multiple spaces with single space
   normalized = normalized.replace(/\s+/g, ' ');
   
-  // Remove common noise words at the beginning or end
-  const noisePatterns = [
-    /^(senior|junior|lead|staff|principal|entry[\s-]level)\s+/i,
-    /\s+(i|ii|iii|iv|v|1|2|3|4|5)$/i,
-    /\s+\(.*?\)$/,  // Remove parenthetical content at the end
-  ];
-  
-  // Note: We keep these patterns but with a lighter touch to preserve meaning
-  // Only remove parenthetical content
+  // Remove parenthetical content at the end
   normalized = normalized.replace(/\s+\(.*?\)$/, '');
   
   return normalized.trim();

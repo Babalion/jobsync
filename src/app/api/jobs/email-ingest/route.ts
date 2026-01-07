@@ -5,6 +5,12 @@ import { getCurrentUser } from "@/utils/user.utils";
 import { ensureUserExists } from "@/utils/user.ensure";
 import { parseJobEmailAuto } from "@/utils/email-parser.utils";
 import { arePotentialDuplicates } from "@/utils/deduplication.utils";
+import {
+  DUPLICATE_CHECK_TIME_WINDOW_MS,
+  MAX_DUPLICATE_CHECK_JOBS,
+  DEFAULT_JOB_TYPE,
+  DEFAULT_JOB_STATUS,
+} from "@/utils/constants";
 
 // Schema for validating incoming email data
 const EmailIngestSchema = z.object({
@@ -143,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     // Get default status (Draft)
     const defaultStatus = await prisma.jobStatus.findFirst({
-      where: { value: "draft" },
+      where: { value: DEFAULT_JOB_STATUS },
     });
 
     if (!defaultStatus) {
@@ -159,13 +165,13 @@ export async function POST(request: NextRequest) {
         userId: dbUser.id,
         companyId: company.id,
         createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - DUPLICATE_CHECK_TIME_WINDOW_MS),
         },
       },
       include: {
         JobTitle: true,
       },
-      take: 50,
+      take: MAX_DUPLICATE_CHECK_JOBS,
     });
 
     // Check for potential duplicates
@@ -209,7 +215,7 @@ export async function POST(request: NextRequest) {
         jobTitleId: jobTitle.id,
         companyId: company.id,
         locationId: locationId,
-        jobType: "FT", // Default to full-time
+        jobType: DEFAULT_JOB_TYPE,
         statusId: defaultStatus.id,
         jobSourceId: jobSource.id,
         jobUrl: parsedJob.jobUrl || null,
