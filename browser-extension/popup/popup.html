@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobSync Capture</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>JobSync Capture</h1>
+    </header>
+    
+    <main id="main-content">
+      <div id="status" class="status"></div>
+      
+      <div id="config-section" class="section" style="display: none;">
+        <h2>Configuration</h2>
+        <div class="form-group">
+          <label for="api-url">JobSync API URL:</label>
+          <input 
+            type="text" 
+            id="api-url" 
+            placeholder="http://localhost:3000" 
+            value="http://localhost:3000"
+          />
+        </div>
+        <button id="save-config" class="btn btn-primary">Save Configuration</button>
+      </div>
+      
+      <div id="capture-section" class="section">
+        <div id="job-preview" class="job-preview">
+          <h2>Job Preview</h2>
+          <div class="preview-field">
+            <strong>Title:</strong>
+            <span id="preview-title">Loading...</span>
+          </div>
+          <div class="preview-field">
+            <strong>Company:</strong>
+            <span id="preview-company">Loading...</span>
+          </div>
+          <div class="preview-field">
+            <strong>Location:</strong>
+            <span id="preview-location">Loading...</span>
+          </div>
+          <div class="preview-field">
+            <strong>URL:</strong>
+            <span id="preview-url" class="truncate">Loading...</span>
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button id="capture-btn" class="btn btn-primary" disabled>
+            Capture Job
+          </button>
+          <button id="config-btn" class="btn btn-secondary">
+            Configure
+          </button>
+        </div>
+      </div>
+      
+      <div id="success-section" class="section" style="display: none;">
+        <div class="success-message">
+          <svg class="icon-success" viewBox="0 0 24 24">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+          <h2>Job Captured!</h2>
+          <p>The job has been successfully added to your JobSync.</p>
+        </div>
+        <button id="capture-another" class="btn btn-primary">
+          Capture Another
+        </button>
+      </div>
+    </main>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
