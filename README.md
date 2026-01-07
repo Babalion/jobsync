@@ -17,6 +17,7 @@ Job searching can be overwhelming, with numerous applications to track and deadl
 ## Key Features
 - **Application Tracker:** Keep a detailed record of all your job applications, including company details, job titles, application dates, and current status.
 - **Application Dashboard:** Visualize your job search progress with an interactive dashboard showing applications and recent activity.
+- **Automated Job Capture:** Use the browser extension to capture job postings from any website with one click. Automatically extracts job details and prevents duplicates. See [docs/AUTOMATED_CAPTURE.md](docs/AUTOMATED_CAPTURE.md) for details.
 
 
 ## Free to Use and Self-Hosted
