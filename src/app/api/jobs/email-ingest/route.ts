@@ -16,7 +16,7 @@ import {
 const EmailIngestSchema = z.object({
   emailBody: z.string().min(1, "Email body is required"),
   emailSubject: z.string().optional(),
-  fromAddress: z.string().email().optional(),
+  fromAddress: z.string().email().optional().or(z.literal("")),
 });
 
 type EmailIngestData = z.infer<typeof EmailIngestSchema>;

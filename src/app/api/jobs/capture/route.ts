@@ -25,6 +25,26 @@ const JobCaptureSchema = z.object({
 type JobCaptureData = z.infer<typeof JobCaptureSchema>;
 
 /**
+ * Gets or creates the 'extension' job source
+ */
+async function getOrCreateExtensionSource() {
+  let jobSource = await prisma.jobSource.findFirst({
+    where: { value: "extension" },
+  });
+  
+  if (!jobSource) {
+    jobSource = await prisma.jobSource.create({
+      data: {
+        label: "Browser Extension",
+        value: "extension",
+      },
+    });
+  }
+  
+  return jobSource;
+}
+
+/**
  * POST /api/jobs/capture
  * Captures a job posting from browser extensions or external sources
  * Handles deduplication automatically
@@ -123,36 +143,13 @@ export async function POST(request: NextRequest) {
       });
 
       if (!jobSource) {
-        // Only create if user has permission or use a default
-        jobSource = await prisma.jobSource.findFirst({
-          where: { value: "extension" },
-        });
-        
-        // If no extension source exists, create it
-        if (!jobSource) {
-          jobSource = await prisma.jobSource.create({
-            data: {
-              label: "Browser Extension",
-              value: "extension",
-            },
-          });
-        }
+        // Source doesn't exist, use extension as default
+        jobSource = await getOrCreateExtensionSource();
       }
       jobSourceId = jobSource.id;
     } else {
       // Default to extension source
-      let jobSource = await prisma.jobSource.findFirst({
-        where: { value: "extension" },
-      });
-      
-      if (!jobSource) {
-        jobSource = await prisma.jobSource.create({
-          data: {
-            label: "Browser Extension",
-            value: "extension",
-          },
-        });
-      }
+      const jobSource = await getOrCreateExtensionSource();
       jobSourceId = jobSource.id;
     }
 

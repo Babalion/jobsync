@@ -33,7 +33,7 @@ export function normalizeUrl(url: string | null | undefined): string {
     }
     
     return normalized.toLowerCase();
-  } catch {
+  } catch (_error) {
     // If URL is invalid, just normalize the string
     return url.toLowerCase().trim();
   }
