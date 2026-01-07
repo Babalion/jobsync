@@ -6,6 +6,7 @@ import { JOB_TYPES, JobStatus } from "@/models/job.model";
 import { geocodeLocation } from "@/lib/geocode";
 import { getCurrentUser } from "@/utils/user.utils";
 import { ensureUserExists } from "@/utils/user.ensure";
+import { arePotentialDuplicates } from "@/utils/deduplication.utils";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -409,6 +410,77 @@ export const deleteJobById = async (
     return { res, success: true };
   } catch (error) {
     const msg = "Failed to delete job.";
+    return handleError(error, msg);
+  }
+};
+
+/**
+ * Finds potential duplicate jobs for a given job
+ * @param companyId The company ID
+ * @param jobTitleValue The normalized job title value
+ * @param jobUrl Optional job URL
+ * @returns Array of potential duplicate jobs
+ */
+export const findDuplicateJobs = async (
+  companyId: string,
+  jobTitleValue: string,
+  jobUrl?: string | null
+): Promise<any> => {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const dbUser = await ensureUserExists(user);
+
+    // Get recent jobs from the same company (last 30 days)
+    const existingJobs = await prisma.job.findMany({
+      where: {
+        userId: dbUser.id,
+        companyId: companyId,
+        createdAt: {
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        },
+      },
+      include: {
+        JobTitle: true,
+        Company: true,
+      },
+      take: 50,
+    });
+
+    const duplicates = [];
+
+    for (const existingJob of existingJobs) {
+      const isDuplicate = arePotentialDuplicates(
+        {
+          companyId,
+          jobTitleValue,
+          jobUrl: jobUrl || null,
+        },
+        {
+          companyId: existingJob.companyId,
+          jobTitleValue: existingJob.JobTitle.value,
+          jobUrl: existingJob.jobUrl,
+        }
+      );
+
+      if (isDuplicate) {
+        duplicates.push({
+          id: existingJob.id,
+          title: existingJob.JobTitle.label,
+          company: existingJob.Company.label,
+          createdAt: existingJob.createdAt,
+          jobUrl: existingJob.jobUrl,
+        });
+      }
+    }
+
+    return { success: true, duplicates };
+  } catch (error) {
+    const msg = "Failed to find duplicate jobs.";
     return handleError(error, msg);
   }
 };
