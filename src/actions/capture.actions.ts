@@ -56,24 +56,21 @@ async function findDuplicateJob(
       const normalizedCompany = normalizeText(company);
       const normalizedTitle = normalizeText(title);
 
-      // Get all jobs for user to check fuzzy matches
-      const userJobs = await prisma.job.findMany({
-        where: { userId },
-        select: {
-          id: true,
-          Company: { select: { label: true, value: true } },
-          JobTitle: { select: { label: true, value: true } },
-        },
-      });
+      // Use database query with case-insensitive matching
+      // Note: SQLite LIKE is case-insensitive by default
+      const jobs = await prisma.$queryRaw<Array<{ id: string }>>`
+        SELECT j.id 
+        FROM Job j
+        INNER JOIN Company c ON j.companyId = c.id
+        INNER JOIN JobTitle t ON j.jobTitleId = t.id
+        WHERE j.userId = ${userId}
+        AND LOWER(TRIM(REPLACE(c.label, '  ', ' '))) = ${normalizedCompany}
+        AND LOWER(TRIM(REPLACE(t.label, '  ', ' '))) = ${normalizedTitle}
+        LIMIT 1
+      `;
 
-      // Check for fuzzy match on company and title
-      for (const job of userJobs) {
-        const jobCompany = normalizeText(job.Company.label);
-        const jobTitle = normalizeText(job.JobTitle.label);
-
-        if (jobCompany === normalizedCompany && jobTitle === normalizedTitle) {
-          return job.id;
-        }
+      if (jobs.length > 0) {
+        return jobs[0].id;
       }
     }
 

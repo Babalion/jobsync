@@ -13,6 +13,22 @@ export interface ScrapedJobData {
 }
 
 /**
+ * Decode HTML entities in a string
+ */
+function decodeHtmlEntities(text: string): string {
+  const entities: Record<string, string> = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&nbsp;': ' ',
+  };
+  
+  return text.replace(/&[#\w]+;/g, (entity) => entities[entity] || entity);
+}
+
+/**
  * Extract OpenGraph metadata from HTML
  */
 export function extractOpenGraphData(html: string): Partial<ScrapedJobData> {
@@ -21,25 +37,25 @@ export function extractOpenGraphData(html: string): Partial<ScrapedJobData> {
   // Extract og:title
   const titleMatch = html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i);
   if (titleMatch) {
-    data.title = titleMatch[1];
+    data.title = decodeHtmlEntities(titleMatch[1]);
   }
 
   // Extract og:description
   const descMatch = html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i);
   if (descMatch) {
-    data.description = descMatch[1];
+    data.description = decodeHtmlEntities(descMatch[1]);
   }
 
   // Extract og:image
   const imageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i);
   if (imageMatch) {
-    data.logoUrl = imageMatch[1];
+    data.logoUrl = decodeHtmlEntities(imageMatch[1]);
   }
 
   // Extract og:site_name (often the company name)
   const siteMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']+)["']/i);
   if (siteMatch) {
-    data.company = siteMatch[1];
+    data.company = decodeHtmlEntities(siteMatch[1]);
   }
 
   return data;
@@ -54,13 +70,13 @@ export function extractBasicMetadata(html: string): Partial<ScrapedJobData> {
   // Extract page title
   const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
   if (titleMatch) {
-    data.title = titleMatch[1].trim();
+    data.title = decodeHtmlEntities(titleMatch[1].trim());
   }
 
   // Extract meta description
   const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i);
   if (descMatch) {
-    data.description = descMatch[1];
+    data.description = decodeHtmlEntities(descMatch[1]);
   }
 
   return data;
@@ -72,13 +88,14 @@ export function extractBasicMetadata(html: string): Partial<ScrapedJobData> {
 export function extractStructuredData(html: string): Partial<ScrapedJobData> {
   const data: Partial<ScrapedJobData> = {};
 
-  // Look for JSON-LD JobPosting schema
-  const jsonLdMatch = html.match(/<script\s+type=["']application\/ld\+json["'][^>]*>([^<]+)<\/script>/gi);
+  // Look for JSON-LD JobPosting schema - match script tags more reliably
+  const scriptTagRegex = /<script\s+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  const scriptMatches = Array.from(html.matchAll(scriptTagRegex));
   
-  if (jsonLdMatch) {
-    for (const script of jsonLdMatch) {
+  if (scriptMatches.length > 0) {
+    for (const match of scriptMatches) {
       try {
-        const jsonContent = script.replace(/<script[^>]*>|<\/script>/gi, '').trim();
+        const jsonContent = match[1].trim();
         const parsed = JSON.parse(jsonContent);
         
         // Handle both single objects and arrays
