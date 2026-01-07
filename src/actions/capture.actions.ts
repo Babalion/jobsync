@@ -276,7 +276,8 @@ export async function captureJob(input: CaptureJobInput): Promise<CaptureJobResu
     };
   } catch (error) {
     const msg = "Failed to capture job. ";
-    return handleError(error, msg);
+    const errorResult = handleError(error, msg);
+    return errorResult || { success: false, message: msg };
   }
 }
 
