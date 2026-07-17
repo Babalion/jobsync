@@ -1,6 +1,6 @@
 services:
-  app:
-    container_name: jobsync_app
+  jobsync:
+    container_name: jobsync
     build:
       context: .
       dockerfile: Dockerfile
